@@ -1,11 +1,11 @@
 import streamlit as st
 import google.generativeai as genai
 
-# جلب المفتاح من الإعدادات السرية التي وضعتها (Secrets)
+# ربط الكود بالمفتاح السري الذي وضعته في الإعدادات
 api_key = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=api_key)
 
-st.title("🤖 مساعد طه الذكي")
+st.title("🤖 مساعد طاهر الذكي")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -14,7 +14,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("كيف يمكنني مساعدتك اليوم؟"):
+if prompt := st.chat_input("اسألني أي شيء..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
