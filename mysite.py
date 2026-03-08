@@ -1,4 +1,6 @@
 
+
+
 import streamlit as st
 import google.generativeai as genai
 import io
@@ -10,7 +12,7 @@ from audio_recorder_streamlit import audio_recorder
 import librosa
 import soundfile as sf
 
-# 1. إعداد المفتاح السري بأمان
+# 1. إعداد المفتاح السري من Secrets
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
@@ -61,12 +63,12 @@ if audio_bytes:
             with st.chat_message("user"):
                 st.markdown(user_text)
             
-            # 3. الحصول على الرد باستخدام الموديل المستقر gemini-pro
-           model  genai.GenerativeModel(model_name='gemini-1.5-flash')
+            # 3. استخدام الموديل الصحيح مع علامة اليساوي (تم التصحيح هنا)
+            model = genai.GenerativeModel(model_name='gemini-1.5-flash')
             response = model.generate_content(user_text)
             res_text = response.text
             
-            # تحويل الرد لصوت
+            # 4. تحويل الرد لصوت
             tts = gTTS(text=res_text[:300], lang='ar')
             audio_io = io.BytesIO()
             tts.write_to_fp(audio_io)
@@ -86,7 +88,8 @@ if prompt := st.chat_input("💬 أو اكتب رسالتك هنا..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"): st.markdown(prompt)
     
-    model = genai.GenerativeModel('gemini-pro')
+    # تصحيح السطر هنا أيضاً
+    model = genai.GenerativeModel(model_name='gemini-1.5-flash')
     res = model.generate_content(prompt)
     st.session_state.messages.append({"role": "assistant", "content": res.text})
     with st.chat_message("assistant"): st.markdown(res.text)
@@ -95,5 +98,3 @@ if prompt := st.chat_input("💬 أو اكتب رسالتك هنا..."):
 if st.button("🗑️ مسح المحادثة"):
     st.session_state.messages = []
     st.rerun()
-
-
