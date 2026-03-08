@@ -1,3 +1,8 @@
+
+
 streamlit
 google-generativeai
-streamlit-mic-recorder
+audio-recorder-streamlit
+SpeechRecognition
+gTTS
+pipwin
