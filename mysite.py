@@ -2,52 +2,64 @@
 
 import streamlit as st
 import google.generativeai as genai
-from streamlit_mic_recorder import mic_recorder
+import os
+import io
+import base64
+from streamlit_webrtc import webrtc_streamer, WebRtcMode, RTCConfiguration
+import av
+import numpy as np
+from audio_recorder_streamlit import audio_recorder
+import speech_recognition as sr
+from gtts import gTTS
+import tempfile
+import time
 
-# 1. إعداد الصفحة (لتظهر باسمك)
-st.set_page_config(page_title="مساعد طاهر الذكي", page_icon="🎙️")
-
-# 2. ربط مفتاح API
+# --- Configuration --- #
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+elif os.getenv("GOOGLE_API_KEY"):
+    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 else:
-    st.error("المفتاح السري ناقص في الإعدادات!")
+    st.error("GOOGLE_API_KEY not found. Please add it to Streamlit secrets or set it as an environment variable.")
     st.stop()
 
-st.title("🎙️ مساعد طاهر الذكي")
+st.title("🤖 Taher's Voice Assistant - صوتي ومتحدث")
 
-# 3. نظام الذاكرة
+# --- Session State Initialization --- #
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "is_voice_mode" not in st.session_state:
+    st.session_state.is_voice_mode = False
+if "tts_language" not in st.session_state:
+    st.session_state.tts_language = "ar"
 
-for m in st.session_state.messages:
-    with st.chat_message(m["role"]): st.markdown(m["content"])
+# --- Helper Functions --- #
+@st.cache_data(ttl=3600)
+def get_available_models():
+    try:
+        all_models = genai.list_models()
+        supported_models = []
+        for m in all_models:
+            if "generateContent" in m.supported_generation_methods:
+                supported_models.append(m.name.split('/')[-1])
+        return supported_models
+    except Exception as e:
+        st.error(f"Error listing models: {e}")
+        return []
 
-# 4. الميكروفون (الاستبدال الصحيح)
-audio = mic_recorder(start_prompt="🎤 ابدأ التحدث الآن", stop_prompt="✅ إرسال وفهم الصوت", key='recorder')
+def select_model():
+    available_models = get_available_models()
+    if not available_models:
+        st.error("No suitable Gemini models found.")
+        return None
+    preferred_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+    for model_name in preferred_models:
+        if model_name in available_models:
+            return model_name
+    return available_models[0]
 
-if audio:
-    with st.spinner("جاري سماعك وفهم كلامك..."):
-        try:
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            # إرسال الصوت لـ Gemini ليقوم بالرد عليه مباشرة
-            response = model.generate_content([
-                "أجب على هذا التسجيل الصوتي باللغة العربية بذكاء:",
-                {"mime_type": "audio/wav", "data": audio['bytes']}
-            ])
-            
-            # عرض الرد في الصفحة
-            st.session_state.messages.append({"role": "user", "content": "🎤 (رسالة صوتية)"})
-            st.session_state.messages.append({"role": "assistant", "content": response.text})
-            st.rerun()
-        except Exception as e:
-            st.error(f"خطأ: {e}")
-
-# خانة الكتابة العادية
-if prompt := st.chat_input("أو اكتب هنا..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"): st.markdown(prompt)
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    res = model.generate_content(prompt)
-    with st.chat_message("assistant"): st.markdown(res.text)
-    st.session_state.messages.append({"role": "assistant", "content": res.text})
+def speech_to_text(audio_bytes):
+    """Convert speech to text using Google's Speech Recognition"""
+    try:
+        recognizer = sr.Recognizer()
+        with sr.AudioFile(io.BytesIO(audio_bytes)) as source:
