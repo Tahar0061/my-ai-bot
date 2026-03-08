@@ -1,6 +1,11 @@
+
+
 import streamlit as st
 import google.generativeai as genai
 import os
+
+# --- Page Configuration --- #
+st.set_page_config(page_title="Syphax AI", page_icon="🤖")
 
 # --- Configuration --- #
 # Ensure GOOGLE_API_KEY is set in Streamlit secrets or environment variables
@@ -12,7 +17,8 @@ else:
     st.error("GOOGLE_API_KEY not found. Please add it to Streamlit secrets or set it as an environment variable.")
     st.stop()
 
-st.title("🤖 Taher's Intelligent Assistant")
+# --- Title Update --- #
+st.title("🤖 Syphax Intelligent Assistant")
 
 # --- Session State Initialization --- #
 if "messages" not in st.session_state:
@@ -59,7 +65,7 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # Get user input
-if prompt := st.chat_input("Ask me anything..."):
+if prompt := st.chat_input("Ask Syphax anything..."):
     # Add user message to chat history and display
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
