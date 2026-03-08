@@ -62,7 +62,7 @@ if audio_bytes:
                 st.markdown(user_text)
             
             # 3. الحصول على الرد باستخدام الموديل المستقر gemini-pro
-            model  genai.GenerativeModel(model_name='gemini-1.5-flash')
+           model  genai.GenerativeModel(model_name='gemini-1.5-flash')
             response = model.generate_content(user_text)
             res_text = response.text
             
@@ -95,4 +95,5 @@ if prompt := st.chat_input("💬 أو اكتب رسالتك هنا..."):
 if st.button("🗑️ مسح المحادثة"):
     st.session_state.messages = []
     st.rerun()
+
 
