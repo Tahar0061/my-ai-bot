@@ -1,3 +1,6 @@
+
+
+
 import streamlit as st
 import google.generativeai as genai
 import os
@@ -5,7 +8,7 @@ import os
 # --- Page Configuration --- #
 st.set_page_config(page_title="Syphax AI", page_icon="🤖", layout="wide")
 
-# --- Optimized CSS for Performance --- #
+# --- Optimized CSS for Performance & Style --- #
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
@@ -15,17 +18,17 @@ st.markdown("""
         color: #f8fafc;
     }
 
-    /* Optimized Static Gradient Background (Faster than Animation) */
+    /* Static Gradient Background (Fast & Elegant) */
     .stApp {
         background: radial-gradient(circle at top right, #1e293b, #0f172a);
         background-attachment: fixed;
     }
 
-    /* Light Glassmorphism (Optimized Blur) */
+    /* Light Glassmorphism */
     .main .block-container {
         background: rgba(255, 255, 255, 0.03);
         border-radius: 16px;
-        backdrop-filter: blur(8px); /* Reduced blur for speed */
+        backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
         border: 1px solid rgba(255, 255, 255, 0.1);
         padding: 2rem;
@@ -38,7 +41,7 @@ st.markdown("""
         border-right: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    /* Chat Bubbles Optimization */
+    /* Chat Bubbles */
     .stChatMessage {
         background: rgba(255, 255, 255, 0.05) !important;
         border-radius: 12px !important;
@@ -49,10 +52,9 @@ st.markdown("""
     h1 {
         color: #38bdf8 !important;
         font-weight: 700 !important;
-        letter-spacing: -0.02em;
     }
 
-    /* Hide unnecessary Streamlit elements for a cleaner look */
+    /* Hide Streamlit UI elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 </style>
@@ -64,7 +66,7 @@ if "GOOGLE_API_KEY" in st.secrets:
 elif os.getenv("GOOGLE_API_KEY"):
     genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 else:
-    st.error("API Key missing.")
+    st.error("API Key missing. Please check your secrets.")
     st.stop()
 
 st.title("🤖 Syphax AI")
@@ -76,7 +78,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
     st.markdown("---")
-    st.caption("v2.0 | Optimized for Speed")
+    st.caption("v2.1 | Optimized & Fixed")
 
 # --- Chat History --- #
 if "messages" not in st.session_state:
@@ -93,6 +95,7 @@ if prompt := st.chat_input("Message Syphax..."):
         st.markdown(prompt)
 
     try:
+        # Corrected model initialization
         model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(prompt)
         
@@ -101,4 +104,3 @@ if prompt := st.chat_input("Message Syphax..."):
         st.session_state.messages.append({"role": "assistant", "content": response.text})
     except Exception as e:
         st.error(f"Error: {e}")
-
