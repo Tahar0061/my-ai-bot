@@ -1,5 +1,7 @@
 
+إليك الكود المُحدث مع دعم **الصوت والتحدث**:
 
+```python
 import streamlit as st
 import google.generativeai as genai
 import os
@@ -63,3 +65,153 @@ def speech_to_text(audio_bytes):
     try:
         recognizer = sr.Recognizer()
         with sr.AudioFile(io.BytesIO(audio_bytes)) as source:
+            audio = recognizer.record(source)
+        text = recognizer.recognize_google(audio, language='ar-SA')  # Arabic language
+        return text
+    except sr.UnknownValueError:
+        return "لم أفهم الصوت، حاول مرة أخرى"
+    except sr.RequestError:
+        return "خطأ في التعرف على الصوت"
+    except Exception as e:
+        return f"خطأ: {str(e)}"
+
+def text_to_speech(text, lang="ar"):
+    """Convert text to speech"""
+    try:
+        tts = gTTS(text=text, lang=lang, slow=False)
+        audio_buffer = io.BytesIO()
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+        return audio_buffer.getvalue()
+    except Exception as e:
+        st.error(f"TTS Error: {e}")
+        return None
+
+# --- Sidebar Controls --- #
+with st.sidebar:
+    st.header("⚙️ الإعدادات")
+    voice_mode = st.toggle("وضع الصوت", value=st.session_state.is_voice_mode)
+    st.session_state.is_voice_mode = voice_mode
+    
+    language = st.selectbox("لغة الرد الصوتي", ["ar", "en"], 
+                           index=0 if st.session_state.tts_language == "ar" else 1)
+    st.session_state.tts_language = language
+
+# --- Main Application Logic --- #
+col1, col2 = st.columns([1, 3])
+
+with col1:
+    st.markdown("### الرسائل السابقة")
+    for message in st.session_state.messages[-5:]:  # Show last 5 messages
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+with col2:
+    # Voice Mode Interface
+    if st.session_state.is_voice_mode:
+        st.markdown("### 🎤 وضع الصوت النشط")
+        
+        # Audio Recorder
+        audio_bytes = audio_recorder(
+            text="اضغط وسجل صوتك...",
+            recording_color="#e8b923",
+            neutral_color="#6c757d",
+            wave_dark_color="#e8b923",
+            progress_back_color="#e8b923"
+        )
+        
+        if audio_bytes:
+            # Convert speech to text
+            with st.spinner("جاري الاستماع..."):
+                prompt = speech_to_text(audio_bytes)
+                st.session_state.messages.append({"role": "user", "content": f"🎤 {prompt}"})
+                
+                with st.chat_message("user"):
+                    st.markdown(f"🎤 **أنت:** {prompt}")
+                
+                # Get AI response
+                selected_model_name = select_model()
+                if selected_model_name:
+                    model = genai.GenerativeModel(selected_model_name)
+                    response = model.generate_content(prompt)
+                    
+                    response_text = response.text
+                    st.session_state.messages.append({"role": "assistant", "content": response_text})
+                    
+                    with st.chat_message("assistant"):
+                        st.markdown(f"🤖 **المساعد:** {response_text}")
+                        
+                        # Text to Speech
+                        audio_data = text_to_speech(response_text, st.session_state.tts_language)
+                        if audio_data:
+                            st.audio(audio_data, format="audio/mp3")
+                            st.balloons()
+    
+    else:
+        # Text Chat Interface
+        st.markdown("### 💬 الدردشة النصية")
+        if prompt := st.chat_input("اكتب رسالتك هنا..."):
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+
+            selected_model_name = select_model()
+            if selected_model_name:
+                try:
+                    model = genai.GenerativeModel(selected_model_name)
+                    response = model.generate_content(prompt)
+                    
+                    response_text = response.text
+                    st.session_state.messages.append({"role": "assistant", "content": response_text})
+                    
+                    with st.chat_message("assistant"):
+                        st.markdown(response_text)
+                        
+                        # Optional: TTS even in text mode
+                        if st.button("🔊 الاستماع للرد", key=f"tts_{len(st.session_state.messages)}"):
+                            audio_data = text_to_speech(response_text, st.session_state.tts_language)
+                            if audio_data:
+                                st.audio(audio_data, format="audio/mp3")
+
+# --- Clear Chat Button --- #
+if st.button("🗑️ مسح المحادثة", type="secondary"):
+    st.session_state.messages = []
+    st.rerun()
+
+# --- Instructions --- #
+with st.expander("📋 كيفية الاستخدام"):
+    st.markdown("""
+    ### في وضع الصوت:
+    1. فعّل **وضع الصوت** من الشريط الجانبي
+    2. اضغط على الزر الأحمر وسجل صوتك
+    3. المساعد سيسمعك ويرد عليك صوتياً
+    
+    ### في وضع النص:
+    1. اكتب رسالتك في المربع السفلي
+    2. اضغط **🔊 الاستماع للرد** لسماع الرد صوتياً
+    
+    **اللغة**: العربية والإنجليزية مدعومة
+    """)
+```
+
+## 📦 المكتبات المطلوبة للتثبيت:
+
+```bash
+pip install streamlit streamlit-webrtc audio-recorder-streamlit speechrecognition gtts google-generativeai av numpy
+```
+
+## ✨ المميزات الجديدة:
+
+1. **🎤 الاستماع للصوت**: تسجيل صوتي مباشر مع التعرف على الكلام بالعربية
+2. **🔊 الرد الصوتي**: تحويل النص إلى كلام بصوت طبيعي
+3. **⚙️ تبديل الوضع**: نص أو صوت بنقرة واحدة
+4. **🌍 دعم اللغتين**: العربية والإنجليزية
+5. **📱 واجهة محسّنة**: تصميم عصري وسهل الاستخدام
+
+## 🎯 كيفية التشغيل:
+
+```bash
+streamlit run your_app.py
+```
+
+الآن المساعد **يسمعك ويتحدث معك** بكل سهولة! 🚀
