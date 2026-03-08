@@ -1,4 +1,3 @@
-
 import streamlit as st
 import google.generativeai as genai
 
@@ -23,10 +22,13 @@ if prompt := st.chat_input("اسألني أي شيء..."):
         st.markdown(prompt)
 
     try:
-        model = genai.GenerativeModel('gemini-pro')
+        # ملاحظة: استخدمنا النسخة 1.5 لأنها تعمل الآن بشكل أفضل
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(prompt)
+        
+        # إظهار الرد وحفظه
         with st.chat_message("assistant"):
             st.markdown(response.text)
         st.session_state.messages.append({"role": "assistant", "content": response.text})
     except Exception as e:
-        st.error(f"حدث خطأ: {e}")
+        st.error(f"حدث خطأ في الاتصال بجوجل: {e}")
