@@ -9,10 +9,10 @@ st.set_page_config(page_title="Syphax AI", page_icon="🤖", layout="wide")
 # --- Custom CSS for Glassmorphism and Styling --- #
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+    @import url(\'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap\');
 
     html, body, [class*="st-"] {
-        font-family: 'Poppins', sans-serif;
+        font-family: \'Poppins\', sans-serif;
         color: #E0E0E0;
     }
 
@@ -69,12 +69,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Configuration --- #
+# Ensure GOOGLE_API_KEY is set in Streamlit secrets or environment variables
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 elif os.getenv("GOOGLE_API_KEY"):
     genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 else:
-    st.error("GOOGLE_API_KEY not found. Please add it to secrets.")
+    st.error("GOOGLE_API_KEY not found. Please add it to Streamlit secrets or set it as an environment variable.")
     st.stop()
 
 st.title("🤖 Syphax Intelligent Assistant")
@@ -105,7 +106,7 @@ if prompt := st.chat_input("Ask Syphax anything..."):
 
     try:
         # Auto-select best model
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel(\'gemini-1.5-flash\')
         response = model.generate_content(prompt)
         
         with st.chat_message("assistant"):
