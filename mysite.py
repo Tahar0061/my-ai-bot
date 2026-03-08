@@ -1,4 +1,3 @@
-GOOGLE_API_KEY = "AIzaSyDgpIC105BSADkJphkFzUa_kTrvI6881Zo"
 import streamlit as st
 import google.generativeai as genai
 from audio_recorder_streamlit import audio_recorder
@@ -6,44 +5,47 @@ from gtts import gTTS
 import io
 import speech_recognition as sr
 
-# ربط المفتاح السري (Secrets)
+# 1. تهيئة المفتاح السري بأمان
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("المفتاح مفقود في Secrets!")
+    st.error("❌ خطأ: المفتاح السري غير موجود في Secrets!")
     st.stop()
 
-st.title("🤖 مساعد طاهر - النسخة الكاملة")
+st.set_page_config(page_title="مساعد طاهر 2026", layout="centered")
+st.title("🤖 مساعد طاهر - النسخة الجديدة كلياً")
 
-# تعريف الموديل
+# 2. تعريف الموديل الحديث
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-audio_bytes = audio_recorder(text="🎤 اضغط وتحدث الآن")
+# 3. واجهة التسجيل الصوتي
+audio_bytes = audio_recorder(text="🎤 اضغط وسجل طلبك بوضوح", icon_size="3x")
 
 if audio_bytes:
     try:
-        # الجزء الأول: تحويل الصوت لنص (يعمل عندك حالياً)
+        # تحويل الصوت لنص
         r = sr.Recognizer()
         audio_file = io.BytesIO(audio_bytes)
         with sr.AudioFile(audio_file) as source:
             audio = r.record(source)
         user_text = r.recognize_google(audio, language='ar-SA')
-        st.info(f"💬 أنت قلت: {user_text}")
-
-        # الجزء الثاني: "العقل" (هذا هو الجزء الذي كان ناقصاً)
-        with st.spinner("🤖 المساعد يفكر..."):
-            response = model.generate_content(user_text)
-            bot_reply = response.text
         
-        # عرض الرد على الشاشة
-        st.success(f"🤖 المساعد: {bot_reply}")
+        st.info(f"💬 أنت: {user_text}")
 
-        # الجزء الثالث: "النطق" (تحويل الرد لصوت)
-        tts = gTTS(text=bot_reply, lang='ar')
-        audio_out = io.BytesIO()
-        tts.write_to_fp(audio_out)
-        st.audio(audio_out.getvalue(), format="audio/mp3", autoplay=True)
+        # توليد رد الذكاء الاصطناعي
+        with st.spinner("⏳ المساعد يفكر الآن..."):
+            response = model.generate_content(user_text)
+            res_text = response.text
+        
+        st.success(f"🤖 المساعد: {res_text}")
+
+        # تحويل الرد لصوت (TTS)
+        tts = gTTS(text=res_text, lang='ar')
+        audio_io = io.BytesIO()
+        tts.write_to_fp(audio_io)
+        st.audio(audio_io.getvalue(), format="audio/mp3", autoplay=True)
         
     except Exception as e:
-        st.error(f"حدث خطأ أثناء معالجة الرد: {e}")
+        st.warning("⚠️ يرجى إعادة المحاولة والتحدث بوضوح.")
+
 
