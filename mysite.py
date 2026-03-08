@@ -1,2 +1,46 @@
-pip install streamlit# pip install audio-recorder-streamlit# pip install openai import streamlit as stfrom audio_recorder_streamlit import audio_recorderfrom openai import OpenAIAPI_KEY = 'enter-openai-api-key-here' def transcribe_text_to_voice(audio_location): client = OpenAI(api_key=API_KEY) audio_file= open(audio_location, "rb") transcript = client.audio.transcriptions.create(model="whisper-1", file=audio_file) return transcript.text def chat_completion_call(text): client = OpenAI(api_key=API_KEY) messages = [{"role": "user", "content": text}] response = client.chat.completions.create(model="gpt-3.5-turbo-1106", messages=messages) return response.choices[0].message.content def text_to_speech_ai(speech_file_path, api_response): client = OpenAI(api_key=API_KEY) response = client.audio.speech.create(model="tts-1",voice="nova",input=api_response) response.stream_to_file(speech_file_path) st.title("🧑‍💻 Skolo Online 💬 Talking Assistant") """Hi🤖 just click on the voice recorder and let me know how I can help you today?""" audio_bytes = audio_recorder()if audio_bytes: ##Save the Recorded File audio_location = "audio_file.wav" with open(audio_location, "wb") as f: f.write(audio_bytes) #Transcribe the saved file to text text = transcribe_text_to_voice(audio_location) st.write(text) #Use API to get an AI response api_response = chat_completion_call(text) st.write(api_response) # Read out the text response using tts speech_file_path = 'audio_response.mp3' text_to_speech_ai(speech_file_path, api_response) st.audio(speech_file_path)
+import streamlit as st
+import google.generativeai as genai
+from audio_recorder_streamlit import audio_recorder
+from gtts import gTTS
+import io
+import speech_recognition as sr
 
+# 1. ربط المفتاح السري (Secrets)
+if "GOOGLE_API_KEY" in st.secrets:
+    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+else:
+    st.error("❌ المفتاح مفقود في إعدادات Secrets!")
+    st.stop()
+
+st.set_page_config(page_title="مساعد طاهر الجديد", page_icon="🤖")
+st.title("🤖 مساعد طاهر الصوتي (نسخة نظيفة)")
+
+# 2. تعريف الموديل الحديث المتوافق مع مفتاحك
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+# 3. أداة تسجيل الصوت
+audio_bytes = audio_recorder(text="🎤 اضغط وسجل صوتك الآن", icon_size="3x")
+
+if audio_bytes:
+    try:
+        # تحويل الصوت لنص
+        r = sr.Recognizer()
+        audio_file = io.BytesIO(audio_bytes)
+        with sr.AudioFile(audio_file) as source:
+            audio = r.record(source)
+        user_text = r.recognize_google(audio, language='ar-SA')
+        st.info(f"💬 أنت: {user_text}")
+
+        # الحصول على الرد من جوجل
+        response = model.generate_content(user_text)
+        res_text = response.text
+        st.success(f"🤖 المساعد: {res_text}")
+
+        # تحويل الرد لصوت مسموع
+        tts = gTTS(text=res_text, lang='ar')
+        audio_out = io.BytesIO()
+        tts.write_to_fp(audio_out)
+        st.audio(audio_out.getvalue(), format="audio/mp3", autoplay=True)
+
+    except Exception as e:
+        st.warning("يرجى التحدث بوضوح أو التأكد من اتصال الإنترنت.")
