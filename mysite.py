@@ -2,103 +2,57 @@
 import streamlit as st
 import google.generativeai as genai
 import io
-import os
-import tempfile
 import speech_recognition as sr
-import numpy as np
 from gtts import gTTS
 from audio_recorder_streamlit import audio_recorder
+import tempfile
+import os
 import librosa
 import soundfile as sf
+import numpy as np
 
-# إعداد المفتاح السري (تأكد من وجوده في Secrets)
+# إعداد API
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("❌ مفقود مفتاح API!")
+    st.error("❌ مفتاح API مفقود!")
     st.stop()
 
-st.set_page_config(page_title="مساعد طاهر الصوتي", page_icon="🤖")
-st.title("🤖 مساعد طاهر الصوتي")
-st.markdown("---")
+st.set_page_config(page_title="طاهر الصوتي", layout="wide")
+st.title("🤖 طاهر - مساعدك الصوتي")
+st.markdown("🎙️ **تحدث معي الآن - سأرد عليك صوتياً!**")
 
-# ذاكرة المحادثة
+# الذاكرة
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "processing" not in st.session_state:
+    st.session_state.processing = False
+if "audio_players" not in st.session_state:
+    st.session_state.audio_players = []
 
-# عرض آخر 5 رسائل
-for m in st.session_state.messages[-5:]:
+# عرض المحادثة
+for i, m in enumerate(st.session_state.messages[-8:]):
     with st.chat_message(m["role"]):
         st.markdown(m["content"])
+        
+        # إضافة زر تشغيل صوت للردود السابقة
+        if m["role"] == "assistant" and i < len(st.session_state.audio_players):
+            if st.button("🔊 استمع", key=f"replay_{i}"):
+                st.audio(st.session_state.audio_players[i], format="audio/mp3")
 
-st.markdown("---")
+# الفاصل
+st.markdown("─" * 70)
 
-# أداة تسجيل الصوت
-audio_bytes = audio_recorder(
-    text="🎤 اضغط وسجل صوتك",
-    icon_size="3x",
-    recording_color="#ff4b4b",
-    neutral_color="#6c757d"
-)
+# الميكروفون الرئيسي
+col1, col2 = st.columns([3, 1])
+with col1:
+    audio_bytes = audio_recorder(
+        text="🎙️ اضغط طويلاً للتحدث (3-5 ثوان)",
+        recording_color="#ff4757",
+        neutral_color="#2d3436",
+        icon_size="4x",
+        sample_rate=16000
+    )
 
-if audio_bytes:
-    with st.spinner("🔄 جاري المعالجة..."):
-        try:
-            # تحويل الصوت للصيغة الصحيحة
-            audio_array, sample_rate = librosa.load(io.BytesIO(audio_bytes), sr=16000, mono=True)
-            
-            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
-                sf.write(temp_file.name, audio_array, 16000)
-                temp_file_path = temp_file.name
-            
-            # التعرف على الكلام
-            r = sr.Recognizer()
-            with sr.AudioFile(temp_file_path) as source:
-                audio = r.record(source)
-            
-            try:
-                user_text = r.recognize_google(audio, language='ar-SA')
-            except:
-                user_text = r.recognize_google(audio, language='en-US')
-            
-            os.unlink(temp_file_path) # مسح الملف المؤقت
-            
-            # إضافة رسالة المستخدم
-            st.session_state.messages.append({"role": "user", "content": user_text})
-            with st.chat_message("user"):
-                st.markdown(user_text)
-            
-            # الحصول على رد من Gemini (تم استخدام الإصدار الأحدث لضمان الرد)
-            model = genai.GenerativeModel('gemini-1.5-flash-latest')
-            response = model.generate_content(user_text)
-            res_text = response.text
-            
-            # تحويل الرد لصوت
-            tts = gTTS(text=res_text[:300], lang='ar')
-            audio_io = io.BytesIO()
-            tts.write_to_fp(audio_io)
-            
-            with st.chat_message("assistant"):
-                st.markdown(res_text)
-                st.audio(audio_io.getvalue(), format="audio/mp3", autoplay=True)
-                st.balloons()
-            
-            st.session_state.messages.append({"role": "assistant", "content": res_text})
-            
-        except Exception as e:
-            st.error(f"❌ حدث خطأ: {str(e)}")
-
-# خانة الكتابة النصية
-if prompt := st.chat_input("💬 اكتب هنا..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"): st.markdown(prompt)
-    
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
-    res = model.generate_content(prompt)
-    st.session_state.messages.append({"role": "assistant", "content": res.text})
-    with st.chat_message("assistant"): st.markdown(res.text)
-
-# أزرار التحكم
-if st.button("🗑️ مسح المحادثة"):
-    st.session_state.messages = []
-    st.rerun()
+with col2:
+    st.info("💡 نصائح:\n• تحدث بوضوح\n• 3-5 ثوان كافية\n• العربية الفصحى أفض
