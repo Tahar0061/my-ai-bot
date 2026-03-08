@@ -1,8 +1,7 @@
 streamlit
+google-generativeai>=0.8.3
 speechrecognition
-gtts
-google-generativeai
+gTTS
 audio-recorder-streamlit
 librosa
 soundfile
-numpy
