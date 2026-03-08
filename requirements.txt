@@ -1,8 +1,8 @@
-
-
 streamlit
+speechrecognition
+gtts
 google-generativeai
 audio-recorder-streamlit
-SpeechRecognition
-gTTS
-pipwin
+librosa
+soundfile
+numpy
