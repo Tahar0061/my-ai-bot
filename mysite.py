@@ -1,156 +1,128 @@
 import streamlit as st
 import google.generativeai as genai
+import io
+import speech_recognition as sr
+from gtts import gTTS
+from audio_recorder_streamlit import audio_recorder
+import tempfile
 import os
-import datetime
+import soundfile as sf
+import librosa
+import numpy as np
 
-# --- Page Configuration --- #
-st.set_page_config(page_title="Syphax AI Pro", page_icon="✨", layout="wide")
-
-# --- Custom CSS for Advanced Glassmorphism & Futuristic UI --- #
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600;700&display=swap');
-    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
-
-    html, body, [class*="st-"] {
-        font-family: 'Inter', sans-serif;
-        color: #e2e8f0;
-    }
-
-    /* Animated Dark Background */
-    .stApp {
-        background: linear-gradient(225deg, #0a0a0a, #1a1a1a, #2a2a2a, #1a1a1a);
-        background-size: 400% 400%;
-        animation: gradientBG 20s ease infinite;
-        background-attachment: fixed;
-    }
-
-    @keyframes gradientBG {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-
-    /* Advanced Glassmorphism Container */
-    .main .block-container {
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 25px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        padding: 3.5rem;
-        margin-top: 2.5rem;
-    }
-
-    /* Sidebar Glassmorphism */
-    [data-testid="stSidebar"] {
-        background: rgba(255, 255, 255, 0.05) !important;
-        backdrop-filter: blur(15px) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    /* Futuristic Title */
-    h1 {
-        font-family: 'Orbitron', sans-serif;
-        color: #0ea5e9 !important;
-        font-weight: 700 !important;
-        text-shadow: 0 0 15px rgba(14, 165, 233, 0.6);
-    }
-
-    /* Chat Bubbles Styling */
-    .stChatMessage {
-        border-radius: 15px !important;
-        padding: 15px !important;
-        margin-bottom: 10px !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-
-    /* Status Bar Footer */
-    .footer-status {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: rgba(0,0,0,0.8);
-        padding: 10px 20px;
-        color: #0ea5e9;
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.8em;
-        display: flex;
-        justify-content: space-between;
-        z-index: 1000;
-        border-top: 1px solid rgba(255,255,255,0.1);
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# --- API Configuration --- #
+# إعداد API
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-elif os.getenv("GOOGLE_API_KEY"):
-    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 else:
-    st.error("API Key missing.")
+    st.error("❌ مفتاح API مفقود!")
     st.stop()
 
-st.title("✨ Syphax AI Pro")
+st.title("🤖 مساعد طاهر الصوتي")
+st.caption("🎤 تحدث معي الآن - سأسمعك وأرد صوتياً!")
 
-# --- Sidebar Widgets --- #
-with st.sidebar:
-    st.header("⚙️ Control Panel")
-    
-    # Weather Widget (Simulated)
-    st.markdown("""
-    <div style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px; border: 1px solid rgba(255,255,255,0.1);">
-        <h4 style="color: #0ea5e9; margin:0;"><i class="fas fa-cloud-sun"></i> Weather</h4>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-            <span style="font-size: 2em;">24°C</span>
-            <span>Sunny</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    language = st.selectbox("🌐 Language", ["English", "العربية", "Français"])
-    persona = st.selectbox("👤 Persona", ["Assistant", "Creative", "Technical"])
-    
-    if st.button("🗑️ Clear Chat", use_container_width=True):
-        st.session_state.messages = []
-        st.rerun()
-
-# --- Chat History --- #
+# الذاكرة
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "processing" not in st.session_state:
+    st.session_state.processing = False
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# عرض آخر 6 رسائل
+for m in st.session_state.messages[-6:]:
+    with st.chat_message(m["role"]):
+        st.markdown(m["content"])
 
-# --- Input & Response --- #
-if prompt := st.chat_input("Message Syphax Pro..."):
+st.markdown("─" * 60)
+
+# ✅ أداة تسجيل الصوت المُصححة
+audio_bytes = audio_recorder(
+    text="🎙️ اضغط للتحدث",
+    recording_color="#ff4b4b",
+    neutral_color="#6c757d",
+    icon_size="3x",
+    sample_rate=16000  # ✅ إضافة sample_rate هنا تحل المشكلة!
+)
+
+if audio_bytes and not st.session_state.processing:
+    st.session_state.processing = True
+    
+    with st.spinner("🔄 جاري سماعك وتحليل الكلام..."):
+        try:
+            # ✅ 1. تصحيح صيغة الصوت (هذا الحل الرئيسي!)
+            # تحويل لـ 16kHz mono WAV
+            audio_array, sr_rate = librosa.load(io.BytesIO(audio_bytes), sr=16000, mono=True)
+            
+            # حفظ مؤقت للصيغة الصحيحة
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+                sf.write(tmp_file.name, audio_array, 16000)
+                fixed_audio_path = tmp_file.name
+            
+            # 2. تحويل الصوت لنص (الآن سيعمل 100%)
+            r = sr.Recognizer()
+            with sr.AudioFile(fixed_audio_path) as source:
+                r.adjust_for_ambient_noise(source, duration=0.2)
+                audio = r.record(source)
+            
+            # التعرف على الكلام
+            user_text = r.recognize_google(audio, language='ar-SA')
+            
+            # تنظيف الملف المؤقت
+            os.unlink(fixed_audio_path)
+            
+            # عرض كلامك
+            st.session_state.messages.append({"role": "user", "content": f"🎤 {user_text}"})
+            with st.chat_message("user"):
+                st.markdown(f"**أنت:** {user_text}")
+                st.balloons()
+            
+            # 3. رد الذكاء الاصطناعي
+            model = genai.GenerativeModel('gemini-1.5-flash')  # الأسرع والأفضل
+            response = model.generate_content(user_text)
+            res_text = response.text
+            
+            # 4. تحويل الرد لصوت
+            tts = gTTS(text=res_text[:350], lang='ar', slow=False)
+            audio_io = io.BytesIO()
+            tts.write_to_fp(audio_io)
+            audio_io.seek(0)
+            
+            with st.chat_message("assistant"):
+                st.markdown(f"**طاهر:** {res_text}")
+                st.audio(audio_io.getvalue(), format="audio/mp3")
+            
+            st.session_state.messages.append({"role": "assistant", "content": res_text})
+            
+        except sr.UnknownValueError:
+            st.warning("👂 لم أفهم الكلام! تحدث ببطء ووضوح أكثر 😊")
+        except sr.RequestError as e:
+            st.error(f"❌ مشكلة في Google Speech: {e}")
+        except Exception as e:
+            st.error(f"❌ خطأ: {str(e)[:100]}")
+        
+        st.session_state.processing = False
+        st.rerun()
+
+# خانة النص
+if prompt := st.chat_input("💬 أو اكتب هنا..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
-
-    try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt)
-        with st.chat_message("assistant"):
-            st.markdown(response.text)
+    
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    response = model.generate_content(prompt)
+    
+    with st.chat_message("assistant"):
+        st.markdown(response.text)
         st.session_state.messages.append({"role": "assistant", "content": response.text})
-    except Exception as e:
-        st.error(f"Error: {e}")
 
-# --- Footer Status Bar --- #
-st.markdown(f"""
-<div class="footer-status">
-    <span><i class="fas fa-microchip"></i> System: Online</span>
-    <span><i class="fas fa-clock"></i> {datetime.datetime.now().strftime("%H:%M:%S")} UTC</span>
-    <span><i class="fas fa-network-wired"></i> Secure Connection</span>
-</div>
-""", unsafe_allow_html=True)
+# أزرار التحكم
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("🗑️ مسح المحادثة", type="secondary"):
+        st.session_state.messages = []
+        st.session_state.processing = False
+        st.rerun()
+with col2:
+    st.info("✅ جاهز للاستماع!")
 
-
-
-
+st.markdown("---")
+st.caption("👨‍💻 طاهر | صوتي وسريع الاستجابة 🚀")
