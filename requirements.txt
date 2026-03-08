@@ -1,7 +1,5 @@
 streamlit
 google-generativeai>=0.8.3
+audio-recorder-streamlit
 speechrecognition
 gTTS
-audio-recorder-streamlit
-librosa
-soundfile
