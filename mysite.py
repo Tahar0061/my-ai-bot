@@ -11,15 +11,23 @@ import os
 import tempfile
 from openai import OpenAI
 
-# OpenAI API Configuration
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# OpenAI API Configuration مع حقل إدخال
+api_key = st.sidebar.text_input("🔑 أدخل OpenAI API Key:", type="password", 
+                               help="احصل على المفتاح من https://platform.openai.com/api-keys")
+
+if api_key:
+    client = OpenAI(api_key=api_key)
+    st.sidebar.success("✅ تم الاتصال بنجاح!")
+else:
+    st.sidebar.warning("⚠️ يرجى إدخال OpenAI API Key")
+    st.stop()
 
 st.set_page_config(page_title="Taher Voice Assistant", page_icon="🤖")
 
 st.title("🤖 مساعد طاهر الصوتي")
 st.markdown("---")
 
-# Session State Initialization
+# باقي الكود يبقى كما هو...
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "listening" not in st.session_state:
@@ -93,9 +101,9 @@ if audio_bytes:
             status_text.text("🤖 جاري التفكير في الرد...")
             progress_bar.progress(90)
             
-            # Get response from OpenAI GPT-4
+            # Get response from OpenAI GPT-4 (تم تصحيح اسم الموديل)
             response = client.chat.completions.create(
-                model="gpt-4.1-mini",
+                model="gpt-4o-mini",  # تم تصحيح اسم الموديل
                 messages=[
                     {"role": "system", "content": "أنت مساعد ذكي متعدد اللغات. تتحدث باللغة العربية والإنجليزية. كن مفيداً وودياً وإيجابياً في ردودك."},
                     {"role": "user", "content": user_text}
@@ -139,7 +147,7 @@ if prompt := st.chat_input("💬 اكتب رسالتك هنا أو استخدم 
     
     with st.chat_message("assistant"):
         response = client.chat.completions.create(
-            model="gpt-4.1-mini",
+            model="gpt-4o-mini",  # تم تصحيح اسم الموديل
             messages=[
                 {"role": "system", "content": "أنت مساعد ذكي متعدد اللغات. تتحدث باللغة العربية والإنجليزية. كن مفيداً وودياً وإيجابياً في ردودك."},
                 {"role": "user", "content": prompt}
