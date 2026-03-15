@@ -1,71 +1,55 @@
+
 import streamlit as st
 import requests
 from datetime import datetime
 
-st.set_page_config(page_title="مرصد طاهر العالمي للطقس", page_icon="🌤️")
+# إعداد الصفحة لتكون عريضة واحترافية
+st.set_page_config(page_title="مراقب الطقس العالمي", layout="wide")
 
-st.title("🌤️ تطبيق طاهر للأرصاد الجوية العالمية")
-
-# إدخال اسم المدينة
-city = st.text_input("اكتب اسم أي مدينة بالعربي أو الإنجليزي (مثلاً: مكة، Berlin، Cairo):", "مكة")
-
-# استخدام واجهة برمجة تطبيقات مفتوحة للطقس (Open-Meteo) لا تحتاج لمفتاح API
-def get_weather(city_name):
-    # أولاً: نحصل على إحداثيات المدينة
+# دالة لجلب البيانات الشاملة
+def get_full_weather(city_name):
     geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=1&language=ar&format=json"
     geo_res = requests.get(geo_url).json()
-    
     if 'results' in geo_res:
-        lat = geo_res['results'][0]['latitude']
-        lon = geo_res['results'][0]['longitude']
-        timezone = geo_res['results'][0]['timezone']
-        
-        # ثانياً: جلب بيانات الطقس التفصيلية
-        weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&daily=sunrise,sunset&timezone={timezone}"
-        return requests.get(weather_url).json()
-    return None
+        res = geo_res['results'][0]
+        lat, lon, timezone = res['latitude'], res['longitude'], res['timezone']
+        weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,uv_index,visibility&daily=sunrise,sunset,uv_index_max&timezone={timezone}"
+        return requests.get(weather_url).json(), res['name']
+    return None, None
 
-data = get_weather(city)
+# واجهة المستخدم
+st.title("🌍 مركز الأرصاد الجوية الاحترافي")
+city_input = st.text_input("أدخل المدينة لاستكشاف طقسها الآن:", "مكة")
+
+data, city_name = get_full_weather(city_input)
 
 if data:
-    current = data['current']
+    curr = data['current']
     daily = data['daily']
     
-    # 1. عرض درجة الحرارة والحالة العامة
-    col1, col2, col3 = st.columns(3)
+    # --- قسم الفيديوهات التوضيحية (بناءً على حالة الطقس) ---
+    st.subheader("📺 نظرة حية على الأجواء")
+    code = curr['weather_code']
+    # فيديوهات عينات (روابط مباشرة لمقاطع فيديو قصيرة)
+    if code == 0: # صافي
+        st.video("https://www.shutterstock.com/shutterstock/videos/1069352158/preview/stock-footage-clear-blue-sky-with-white-clouds-time-lapse-sky-background.mp4")
+    elif code in [1, 2, 3]: # غيوم جزئية
+        st.video("https://www.shutterstock.com/shutterstock/videos/1060194382/preview/stock-footage-beautiful-white-clouds-soar-across-the-blue-sky.mp4")
+    else: # مطر أو عواصف
+        st.video("https://www.shutterstock.com/shutterstock/videos/1058455825/preview/stock-footage-rain-drops-falling-on-the-glass-window-rainy-day.mp4")
+
+    st.divider()
+
+    # --- القسم الأول: الحرارة والرطوبة (كما في 776.jpg) ---
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("درجة الحرارة الآن", f"{current['temperature_2m']}°C")
+        st.metric("الحرارة الفعلية", f"{curr['temperature_2m']}°C")
     with col2:
-        st.metric("الرياح", f"{current['wind_speed_10m']} كم/س")
+        st.metric("الإحساس الحقيقي", f"{curr['apparent_temperature']}°C")
     with col3:
-        st.metric("الرطوبة", f"{current['relative_humidity_2m']}%")
+        st.metric("الرطوبة", f"{curr['relative_humidity_2m']}%")
+    with col4:
+        st.metric("الرؤية", f"{curr['visibility'] / 1000} كم")
 
-    st.divider()
-
-    # 2. أوقات الشروق والغروب (كما في صورتك)
-    col_s1, col_s2 = st.columns(2)
-    with col_s1:
-        st.write("🌅 **شروق الشمس:**")
-        st.info(daily['sunrise'][0].split("T")[1])
-    with col_s2:
-        st.write("🌇 **غروب الشمس:**")
-        st.info(daily['sunset'][0].split("T")[1])
-
-    st.divider()
-
-    # 3. تحليل حالة المشي (تحليل مبرمج)
-    st.subheader("🏃 حالة المشي والرياضة اليوم:")
-    temp = current['temperature_2m']
-    wind = current['wind_speed_10m']
-    
-    if 15 <= temp <= 30 and wind < 20:
-        st.success("✅ الأجواء ممتازة للمشي الآن!")
-    elif temp > 30:
-        st.warning("⚠️ الجو حار، يفضل المشي في المساء.")
-    else:
-        st.error("🥶 الجو بارد جداً أو الرياح قوية، انتبه!")
-
-else:
-    st.error("لم يتم العثور على المدينة، تأكد من كتابة الاسم بشكل صحيح.")
-
-st.caption("تمت البرمجة بواسطة طاهر - بيانات حية من القمر الصناعي")
+    # --- القسم الثاني: الشمس والرياح (كما في 780.jpg و 782.jpg) ---
+    st
