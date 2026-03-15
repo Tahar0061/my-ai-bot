@@ -25,3 +25,4 @@ if recorded_text:
             st.code(response.text, language='python') # سيعرض الكود بشكل منسق
         except Exception as e:
             st.error(f"حدث خطأ: {e}")
+model = genai.GenerativeModel('gemini-1.5-flash-latest')
