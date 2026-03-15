@@ -1,34 +1,33 @@
+
 import streamlit as st
-import google.generativeai as genai
-from streamlit_mic_recorder import speech_to_text
 
-# إعداد الصفحة والمفتاح
-st.set_page_config(page_title="مبرمج طاهر الذكي", layout="centered")
-if "GOOGLE_API_KEY" in st.secrets:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+st.set_page_config(page_title="مختبر طاهر", page_icon="✅")
+
+st.title("📝 تطبيق إدارة المهام (إختبار النظام)")
+
+# إنشاء قائمة مهام في ذاكرة المتصفح
+if 'tasks' not in st.session_state:
+    st.session_state.tasks = []
+
+# إدخال مهمة جديدة
+new_task = st.text_input("أضف مهمة جديدة لاختبار النظام:", placeholder="مثلاً: تنظيف الملفات...")
+
+if st.button("إضافة"):
+    if new_task:
+        st.session_state.tasks.append(new_task)
+        st.success("تمت الإضافة بنجاح!")
+    else:
+        st.warning("اكتب شيئاً أولاً")
+
+# عرض المهام
+st.subheader("قائمة المهام المضافة:")
+if st.session_state.tasks:
+    for i, task in enumerate(st.session_state.tasks):
+        st.write(f"{i+1}. {task}")
 else:
-    st.error("المفتاح السري مفقود في إعدادات Secrets!")
-    st.stop()
+    st.info("القائمة فارغة حالياً.")
 
-st.title("🤖 مبرمج طاهر الذكي")
-
-# محاولة تحميل الموديل بأكثر من اسم لضمان العمل
-try:
-    model = genai.GenerativeModel('gemini-1.5-flash')
-except:
-    model = genai.GenerativeModel('gemini-pro')
-
-# واجهة التحدث
-st.subheader("قل لي ماذا تريد أن أبرمج لك:")
-recorded_text = speech_to_text(language='ar-SA', start_prompt="تحدث الآن 🎤", stop_prompt="إرسال الطلب ✅", key='final_mic')
-
-if recorded_text:
-    st.info(f"🚀 جاري معالجة طلبك: {recorded_text}")
-    with st.spinner("جاري كتابة الكود..."):
-        try:
-            # استخدام generate_content بطريقة آمنة
-            response = model.generate_content(f"اكتب كود برمجي لـ: {recorded_text}")
-            st.success("✅ تم إنشاء الكود:")
-            st.code(response.text)
-        except Exception as e:
-            st.error(f"حدث خطأ في النظام: {e}")
+# زر لمسح كل شيء
+if st.button("مسح الكل"):
+    st.session_state.tasks = []
+    st.rerun()
