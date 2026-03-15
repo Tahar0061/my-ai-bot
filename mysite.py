@@ -1,65 +1,62 @@
+
 import streamlit as st
 import requests
 import pandas as pd
-import plotly.graph_objects as go
 from datetime import datetime
 
 # إعداد الصفحة
 st.set_page_config(page_title="طاهر | الطقس الذكي", page_icon="🌤️", layout="wide")
 
-# تصميم CSS احترافي متكامل
+# التصميم الذي أعجبك (CSS)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;700&display=swap');
     * { font-family: 'IBM Plex Sans Arabic', sans-serif; }
     .main-header {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        padding: 20px; border-radius: 15px; color: white; text-align: center; margin-bottom: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem; border-radius: 20px; color: white; text-align: center; margin-bottom: 2rem;
     }
     .weather-card {
-        background: #f8f9fa; padding: 15px; border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;
+        background: white; padding: 1.5rem; border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08); text-align: center;
     }
-    .metric-value { font-size: 2rem; font-weight: bold; color: #1e3a8a; }
+    .metric-value { font-size: 2.5rem; font-weight: 700; color: #1e3a8a; }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="main-header"><h1>🌤️ مركز طاهر للأرصاد الجوية</h1></div>', unsafe_allow_html=True)
 
-# دالة جلب البيانات
+# دالة جلب البيانات (المصححة)
 @st.cache_data(ttl=300)
-def get_weather(city_name):
+def get_weather_data(city_name):
     try:
         geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=1&language=ar"
-        res = requests.get(geo_url).json()
-        if 'results' in res:
-            loc = res['results'][0]
+        geo_res = requests.get(geo_url).json()
+        if 'results' in geo_res:
+            loc = geo_res['results'][0]
             lat, lon = loc['latitude'], loc['longitude']
+            # طلب البيانات الحالية واليومية معاً
             w_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,pressure_msl&daily=sunrise,sunset,uv_index_max&timezone=auto"
-            return requests.get(w_url).json(), loc['name']
+            w_res = requests.get(w_url).json()
+            return w_res, loc['name']
     except: return None, None
     return None, None
 
 city = st.sidebar.text_input("🔍 ابحث عن مدينة:", "Witten")
-data, city_name = get_weather(city)
+data, city_full_name = get_weather_data(city)
 
-if data:
+if data and 'current' in data:
     curr = data['current']
     daily = data['daily']
 
-    # --- 1. قسم الفيديوهات (نظرة حية) ---
-    st.subheader("📺 محاكاة حالة الطقس")
-    code = curr['weather_code']
-    if code == 0: # صافي
-        st.video("https://www.w3schools.com/html/mov_bbb.mp4") 
-    elif code in [1, 2, 3]: # غيوم
-        st.video("https://www.shutterstock.com/shutterstock/videos/1060194382/preview/stock-footage-beautiful-white-clouds-soar-across-the-blue-sky.mp4")
-    else: # مطر
-        st.video("https://www.w3schools.com/html/rain.mp4")
+    # 1. عرض الفيديو (نظرة حية) -
+    st.subheader(f"📺 نظرة حية على الأجواء في {city_full_name}")
+    if curr['weather_code'] == 0:
+        st.video("https://www.w3schools.com/html/mov_bbb.mp4") # فيديو سماء صافية
+    else:
+        st.video("https://v.ftcdn.net/02/10/33/21/700_F_210332152_m6p6oT7fU6AAYkP7XWvXvB9B0A3JjV5m_ST.mp4") # فيديو غيوم/مطر
 
-    st.divider()
-
-    # --- 2. أيقونات البيانات الأساسية (مثل صورك 776 و 780) ---
+    # 2. بطاقات البيانات الأساسية -
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown(f'<div class="weather-card"><div>🌡️ الحرارة</div><div class="metric-value">{curr["temperature_2m"]}°C</div></div>', unsafe_allow_html=True)
@@ -70,24 +67,28 @@ if data:
     with col4:
         st.markdown(f'<div class="weather-card"><div>⏲️ الضغط</div><div class="metric-value">{int(curr["pressure_msl"])} hPa</div></div>', unsafe_allow_html=True)
 
+    # 3. تفاصيل الشمس والأشعة -
     st.divider()
-
-    # --- 3. الشمس والأنشطة (مثل 782) ---
-    c1, c2, c3 = st.columns(3)
+    c1, c2 = st.columns(2)
     with c1:
-        st.subheader("☀️ دورة الشمس")
-        st.write(f"🌅 الشروق: {daily['sunrise'][0].split('T')[1]}")
-        st.write(f"🌇 الغروب: {daily['sunset'][0].split('T')[1]}")
+        st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); padding: 20px; border-radius: 20px; color: white; text-align: center;">
+                <h3>🌅 دورة الشمس اليوم</h3>
+                <p>الشروق: {daily['sunrise'][0].split('T')[1]}</p>
+                <p>الغروب: {daily['sunset'][0].split('T')[1]}</p>
+            </div>
+        """, unsafe_allow_html=True)
     with c2:
-        st.subheader("🔆 الأشعة والجو")
-        st.write(f"مؤشر UV: {daily['uv_index_max'][0]}")
-        st.progress(min(daily['uv_index_max'][0] / 12, 1.0))
-    with c3:
-        st.subheader("🏃 نصيحة طاهر")
-        if curr['temperature_2m'] < 30 and code < 3:
-            st.success("الجو مثالي للمشي الآن! 🏃")
-        else:
-            st.warning("يفضل البقاء في الداخل 🏠")
+        st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%); padding: 20px; border-radius: 20px; color: white; text-align: center;">
+                <h3>🔆 مؤشر الأشعة UV</h3>
+                <div style="font-size: 2.5rem; font-weight: bold;">{daily['uv_index_max'][0]}</div>
+                <p>{"منخفض" if daily['uv_index_max'][0] < 3 else "مرتفع، احذر!"}</p>
+            </div>
+        """, unsafe_allow_html=True)
 
 else:
-    st.error("تأكد من كتابة اسم المدينة بشكل صحيح.")
+    st.warning("يرجى التأكد من اسم المدينة أو الانتظار قليلاً لتحديث البيانات.")
+
+st.markdown("---")
+st.info("تطبيق احترافي مطور بواسطة طاهر الذكي")
