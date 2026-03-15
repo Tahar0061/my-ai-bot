@@ -1,29 +1,27 @@
 import streamlit as st
-import pandas as pd
+import google.generativeai as genai
 from streamlit_mic_recorder import speech_to_text
 
-st.set_page_config(page_title="مشروع طاهر الجديد", page_icon="📊")
+# إعداد الموديل
+genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-st.title("🚀 مشروع تحليل البيانات واختبار الصوت")
+st.title("🤖 مبرمج طاهر الذكي")
 
-# قسم اختبار الميكروفون
-st.header("1. اختبار الميكروفون")
-text = speech_to_text(language='ar-SA', start_prompt="تحدث الآن لنجرب الصوت 🎤", stop_prompt="إيقاف ✅", key='mic')
+# التقاط الأمر الصوتي
+st.subheader("قل لي ماذا تريد أن أبرمج لك:")
+recorded_text = speech_to_text(language='ar-SA', start_prompt="تحدث الآن 🎤", stop_prompt="إرسال الطلب ✅", key='coder_mic')
 
-if text:
-    st.success(f"✅ الميكروفون يعمل! النص الملتقط: {text}")
-
-# قسم رفع الملفات
-st.header("2. مركز رفع الملفات")
-uploaded_file = st.file_uploader("اختر ملفاً من جهازك (صورة أو CSV)")
-
-if uploaded_file is not None:
-    st.write(f"📁 اسم الملف: {uploaded_file.name}")
-    st.write(f"⚖️ حجم الملف: {uploaded_file.size} بايت")
+if recorded_text:
+    st.info(f"🚀 جاري معالجة طلبك: {recorded_text}")
     
-    if uploaded_file.name.endswith('.csv'):
-        df = pd.read_csv(uploaded_file)
-        st.write("📊 بيانات الملف:")
-        st.dataframe(df)
-    else:
-        st.image(uploaded_file, caption="المعاينة")
+    # إرسال الطلب لـ Gemini
+    with st.spinner("جاري كتابة الكود..."):
+        try:
+            prompt = f"أنت مبرمج خبير، اكتب لي كود برمجي كامل لـ: {recorded_text}"
+            response = model.generate_content(prompt)
+            
+            st.success("✅ تم إنشاء الكود بنجاح:")
+            st.code(response.text, language='python') # سيعرض الكود بشكل منسق
+        except Exception as e:
+            st.error(f"حدث خطأ: {e}")
