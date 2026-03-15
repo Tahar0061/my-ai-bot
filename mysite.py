@@ -1,33 +1,44 @@
 
 import streamlit as st
+import yfinance as yf
+import pandas as pd
 
-st.set_page_config(page_title="مختبر طاهر", page_icon="✅")
+st.set_page_config(page_title="مرصد طاهر المالي", layout="wide")
 
-st.title("📝 تطبيق إدارة المهام (إختبار النظام)")
+st.title("💰 تطبيق مراقبة الأسواق العالمية")
 
-# إنشاء قائمة مهام في ذاكرة المتصفح
-if 'tasks' not in st.session_state:
-    st.session_state.tasks = []
+# قائمة الأصول التي سنراقبها
+assets = {
+    'الذهب': 'GC=F',
+    'البيتكوين': 'BTC-USD',
+    'النفط (برنت)': 'BZ=F',
+    'الدولار مقابل اليورو': 'EURUSD=X'
+}
 
-# إدخال مهمة جديدة
-new_task = st.text_input("أضف مهمة جديدة لاختبار النظام:", placeholder="مثلاً: تنظيف الملفات...")
+st.sidebar.header("إعدادات العرض")
+selected_asset = st.sidebar.selectbox("اختر ما تريد مراقبته:", list(assets.keys()))
 
-if st.button("إضافة"):
-    if new_task:
-        st.session_state.tasks.append(new_task)
-        st.success("تمت الإضافة بنجاح!")
+st.subheader(f"📊 تحليل سعر: {selected_asset}")
+
+try:
+    # جلب البيانات من ياهو فاينانس
+    data = yf.download(assets[selected_asset], period="1mo", interval="1d")
+    
+    if not data.empty:
+        # عرض السعر الحالي
+        current_price = data['Close'].iloc[-1]
+        st.metric(label=f"السعر الحالي لـ {selected_asset}", value=f"{current_price:,.2f}")
+        
+        # رسم بياني لحركة السعر في آخر شهر
+        st.line_chart(data['Close'])
+        
+        # عرض جدول البيانات
+        with st.expander("عرض سجل البيانات التاريخي"):
+            st.dataframe(data.tail(10))
     else:
-        st.warning("اكتب شيئاً أولاً")
+        st.error("لم نتمكن من جلب البيانات، تأكد من اتصال السيرفر بالإنترنت.")
 
-# عرض المهام
-st.subheader("قائمة المهام المضافة:")
-if st.session_state.tasks:
-    for i, task in enumerate(st.session_state.tasks):
-        st.write(f"{i+1}. {task}")
-else:
-    st.info("القائمة فارغة حالياً.")
+except Exception as e:
+    st.error(f"حدث خطأ فني: {e}")
 
-# زر لمسح كل شيء
-if st.button("مسح الكل"):
-    st.session_state.tasks = []
-    st.rerun()
+st.info("💡 هذا التطبيق يسحب بيانات حية من الأسواق العالمية لاختبار كفاءة تطبيقك.")
