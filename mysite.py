@@ -1,4 +1,21 @@
-# -*- coding: utf-8 -*-
+import streamlit as st
+import requests
+
+# محاولة استيراد المكتبة بذكاء لتجنب الشاشة الحمراء
+try:
+    from streamlit_lottie import st_lottie
+    LOTTIE_OK = True
+except ImportError:
+    LOTTIE_OK = False
+
+# ... باقي الكود الخاص بك ...
+
+# عند عرض الأيقونة المتحركة
+if LOTTIE_OK:
+    # هنا تضع كود st_lottie
+    pass
+else:
+    st.info("جاري تحميل الأيقونات المتحركة... يرجى الانتظار")# -*- coding: utf-8 -*-
 import streamlit as st
 import requests
 import pandas as pd
