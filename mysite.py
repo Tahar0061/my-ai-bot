@@ -5,322 +5,580 @@ import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime
 from streamlit_lottie import st_lottie
+import numpy as np
 
-# 1. إعداد الصفحة الفاخرة (S26 Ultra Style)
-st.set_page_config(page_title="Taher | Weather Galaxy S26", page_icon="📱", layout="wide")
+# 1. إعداد الصفحة الفاخرة الفائقة (S26 Ultra Dynamic Island Style)
+st.set_page_config(
+    page_title="Taher | Galaxy S26 Ultra Weather", 
+    page_icon="🌌", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# 2. نظام اللغات العالمي (AR, EN, DE, FR)
+# 2. نظام اللغات العالمي مع تأثيرات بصرية
 LANGS = {
     "ar": {
-        "search": "🔍 ابحث عن مدينة:", 
-        "settings": "⚙️ الإعدادات", 
-        "temp": "الحرارة", 
-        "hum": "الرطوبة", 
-        "wind": "الرياح", 
-        "uv": "مؤشر UV", 
-        "feels": "يشعر كـ", 
-        "aqi": "جودة الهواء", 
-        "wear": "ماذا ترتدي؟", 
-        "act": "الأنشطة", 
-        "updated": "تحديث ذكي:", 
-        "forecast": "📅 التوقعات",
-        "not_found": "⚠️ المدينة غير موجودة. يرجى المحاولة مرة أخرى.",
-        "good": "جيد",
-        "moderate": "متوسط",
-        "poor": "سيء",
-        "day": "يوم"
+        "search": "🔍 بحث كوني:", 
+        "settings": "⚙️ إعدادات المجرة", 
+        "temp": "🌡️ الحرارة", 
+        "hum": "💧 الرطوبة الكونية", 
+        "wind": "🌪️ الرياح", 
+        "uv": "☢️ مؤشر UV", 
+        "feels": "💫 يشعر كـ", 
+        "aqi": "✨ نقاء الهواء", 
+        "wear": "👕 ملابس اليوم", 
+        "act": "🚀 أنشطة", 
+        "updated": "🔄 آخر تحديث مجري:", 
+        "forecast": "📅 توقعات الأيام الكونية",
+        "sunrise": "🌅 شروق",
+        "sunset": "🌇 غروب",
+        "pressure": "📊 ضغط جوي",
+        "visibility": "👁️ رؤية",
+        "precip": "🌧️ فرصة أمطار"
     },
     "en": {
-        "search": "🔍 Search City:", 
-        "settings": "⚙️ Settings", 
-        "temp": "Temperature", 
-        "hum": "Humidity", 
-        "wind": "Wind", 
-        "uv": "UV Index", 
-        "feels": "Feels like", 
-        "aqi": "Air Quality", 
-        "wear": "What to wear?", 
-        "act": "Activities", 
-        "updated": "Smart Update:", 
-        "forecast": "📅 Forecast",
-        "not_found": "⚠️ City not found. Please try again.",
-        "good": "Good",
-        "moderate": "Moderate",
-        "poor": "Poor",
-        "day": "Day"
-    },
-    "de": {
-        "search": "🔍 Stadt suchen:", 
-        "settings": "⚙️ Einstellungen", 
-        "temp": "Temperatur", 
-        "hum": "Feuchtigkeit", 
-        "wind": "Wind", 
-        "uv": "UV-Index", 
-        "feels": "Gefühlt", 
-        "aqi": "Luftqualität", 
-        "wear": "Was anziehen?", 
-        "act": "Aktivitäten", 
-        "updated": "Update:", 
-        "forecast": "📅 Vorhersage",
-        "not_found": "⚠️ Stadt nicht gefunden. Bitte versuchen Sie es erneut.",
-        "good": "Gut",
-        "moderate": "Mäßig",
-        "poor": "Schlecht",
-        "day": "Tag"
-    },
-    "fr": {
-        "search": "🔍 Chercher ville:", 
-        "settings": "⚙️ Paramètres", 
-        "temp": "Température", 
-        "hum": "Humidité", 
-        "wind": "Vent", 
-        "uv": "Indice UV", 
-        "feels": "Ressenti", 
-        "aqi": "Qualité d'air", 
-        "wear": "Que porter ?", 
-        "act": "Activités", 
-        "updated": "Mise à jour:", 
-        "forecast": "📅 Prévisions",
-        "not_found": "⚠️ Ville non trouvée. Veuillez réessayer.",
-        "good": "Bon",
-        "moderate": "Modéré",
-        "poor": "Mauvais",
-        "day": "Jour"
+        "search": "🔍 Cosmic Search:", 
+        "settings": "⚙️ Galaxy Settings", 
+        "temp": "🌡️ Temperature", 
+        "hum": "💧 Cosmic Humidity", 
+        "wind": "🌪️ Wind", 
+        "uv": "☢️ UV Index", 
+        "feels": "💫 Feels like", 
+        "aqi": "✨ Air Quality", 
+        "wear": "👕 Today's Wear", 
+        "act": "🚀 Activities", 
+        "updated": "🔄 Galaxy Update:", 
+        "forecast": "📅 Cosmic Forecast",
+        "sunrise": "🌅 Sunrise",
+        "sunset": "🌇 Sunset",
+        "pressure": "📊 Pressure",
+        "visibility": "👁️ Visibility",
+        "precip": "🌧️ Precipitation"
     }
 }
 
-# تهيئة اللغة في الجلسة
-if 'l' not in st.session_state: 
-    st.session_state.l = "ar"
-
-# 3. واجهة الزجاج الفائقة (Ultra Glassmorphism CSS)
-st.markdown(f"""
+# 3. تأثيرات بصرية متطورة (Dynamic Island Effects)
+st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;700&display=swap');
-    * {{ font-family: 'IBM Plex Sans Arabic', sans-serif; }}
-    body {{ background: #f4f7f9; }}
-    .main-header {{
-        background: linear-gradient(135deg, rgba(30,58,138,0.85), rgba(59,130,246,0.85));
-        padding: 3rem; border-radius: 40px; color: white; text-align: center;
-        backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2);
-        box-shadow: 0 25px 50px rgba(0,0,0,0.15); margin-bottom: 2rem;
-    }}
-    .glass-card {{
-        background: rgba(255, 255, 255, 0.75); padding: 2rem; border-radius: 30px;
-        backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4);
-        text-align: center; transition: 0.4s ease-in-out; margin-bottom: 1.5rem;
-        box-shadow: 0 10px 30px rgba(31, 38, 135, 0.1);
-    }}
-    .glass-card:hover {{ transform: scale(1.05); background: rgba(255,255,255,0.95); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }}
-    .m-val {{ font-size: 3rem; font-weight: 800; background: linear-gradient(45deg, #1e3a8a, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
-    .m-lbl {{ font-size: 1rem; color: #444; font-weight: 700; letter-spacing: 1px; }}
-    .error-message {{
-        background: rgba(255, 100, 100, 0.2);
-        border: 1px solid rgba(255, 0, 0, 0.3);
-        border-radius: 20px;
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap');
+    
+    * {
+        font-family: 'Space Grotesk', sans-serif;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    /* خلفية ديناميكية متحركة */
+    .stApp {
+        background: radial-gradient(ellipse at 20% 30%, #0a0f1e, #000000);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* تأثير النجوم المتحركة */
+    .stApp::before {
+        content: '';
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        background-image: radial-gradient(white 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: starsMove 200s linear infinite;
+        opacity: 0.3;
+        pointer-events: none;
+    }
+    
+    @keyframes starsMove {
+        from { transform: translateY(0); }
+        to { transform: translateY(-500px); }
+    }
+    
+    /* Dynamic Island Header */
+    .dynamic-island {
+        background: rgba(20, 30, 50, 0.3);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 60px;
+        padding: 1rem 2rem;
+        margin: 1rem auto;
+        max-width: 90%;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.05);
+        animation: floatIn 1s ease-out;
+    }
+    
+    @keyframes floatIn {
+        0% { transform: translateY(-100px) scale(0.8); opacity: 0; }
+        100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    
+    /* بطاقات زجاجية فائقة مع تأثير ثلاثي الأبعاد */
+    .s26-card {
+        background: linear-gradient(145deg, 
+            rgba(255, 255, 255, 0.1) 0%, 
+            rgba(255, 255, 255, 0.05) 100%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 40px;
         padding: 2rem;
-        text-align: center;
+        margin: 1rem 0;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                   0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .s26-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.5s;
+        pointer-events: none;
+    }
+    
+    .s26-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 40px 60px -15px rgba(0, 0, 0, 0.6),
+                   0 0 0 2px rgba(255, 255, 255, 0.2) inset;
+    }
+    
+    .s26-card:hover::before {
+        opacity: 1;
+        animation: rotate 10s linear infinite;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    /* قيم رقمية متوهجة */
+    .glow-value {
+        font-size: 4rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff, #a0b0ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 30px rgba(100, 150, 255, 0.5);
+        line-height: 1.2;
+    }
+    
+    /* عناوين متألقة */
+    .galaxy-title {
+        font-size: 5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff 0%, #a0d0ff 50%, #fff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 40px rgba(70, 130, 255, 0.7);
+        margin-bottom: 0.5rem;
+        animation: titleGlow 3s ease-in-out infinite;
+    }
+    
+    @keyframes titleGlow {
+        0%, 100% { filter: brightness(1); }
+        50% { filter: brightness(1.2); }
+    }
+    
+    /* توقيت كوني */
+    .cosmic-time {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 100px;
+        padding: 0.8rem 1.5rem;
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: inline-block;
         backdrop-filter: blur(10px);
-        margin: 2rem 0;
-    }}
+    }
+    
+    /* شريط تقدم دائري */
+    .circular-progress {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: conic-gradient(#4a90e2 0deg 180deg, #2c3e50 180deg 360deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+    
+    /* تذييل متطور */
+    .cosmic-footer {
+        text-align: center;
+        padding: 2rem;
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        margin-top: 3rem;
+    }
+    
+    /* أيقونات متحركة */
+    .pulse-icon {
+        animation: pulse 2s ease-in-out infinite;
+        display: inline-block;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    /* شريط جانبي زجاجي */
+    .css-1d391kg, .css-12oz5g7 {
+        background: rgba(10, 15, 25, 0.7) !important;
+        backdrop-filter: blur(20px) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    /* تخصيص الـ scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #4a90e2, #9b59b6);
+        border-radius: 10px;
+    }
+    
+    /* تأثير الظل النيون */
+    .neon-glow {
+        text-shadow: 0 0 10px rgba(74, 144, 226, 0.5),
+                     0 0 20px rgba(74, 144, 226, 0.3),
+                     0 0 30px rgba(74, 144, 226, 0.1);
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# 4. محرك الأيقونات المتحركة (Lottie)
-def load_lottie(url):
-    try: 
-        response = requests.get(url)
-        if response.status_code == 200:
-            return response.json()
-    except: 
-        return None
-
-lottie_weather = load_lottie("https://assets9.lottiefiles.com/packages/lf20_t0x0v9.json")
-
-# 5. دالة جلب البيانات المحسنة
-@st.cache_data(ttl=300)
-def get_weather_data(city_name, lang):
+# 4. دوال مساعدة متطورة
+def load_lottie_url(url):
+    """تحميل رسوم متحركة Lottio مع تأثيرات"""
     try:
-        # البحث عن المدينة
-        geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=1&language={lang}"
-        geo_response = requests.get(geo_url)
-        geo_data = geo_response.json()
-        
-        if 'results' not in geo_data or len(geo_data['results']) == 0:
-            return None
-            
-        location = geo_data['results'][0]
-        
-        # جلب بيانات الطقس
-        weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={location['latitude']}&longitude={location['longitude']}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,uv_index&hourly=temperature_2m&daily=temperature_2m_max,temperature_2m_min&timezone=auto"
-        weather_response = requests.get(weather_url)
-        weather_data = weather_response.json()
-        
-        # جلب بيانات جودة الهواء مع التحقق من الأخطاء
-        aqi_value = "N/A"
-        try:
-            aqi_url = f"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={location['latitude']}&longitude={location['longitude']}&current=european_aqi"
-            aqi_response = requests.get(aqi_url)
-            aqi_data = aqi_response.json()
-            
-            if 'current' in aqi_data and 'european_aqi' in aqi_data['current']:
-                aqi_value = aqi_data['current']['european_aqi']
-        except Exception as e:
-            print(f"Error fetching AQI: {e}")
-        
-        # تجهيز البيانات للعرض
-        return {
-            'city': location.get('name', city_name),
-            'country': location.get('country', ''),
-            'current': weather_data['current'],
-            'daily': weather_data['daily'],
-            'hourly': weather_data['hourly'],
-            'aqi': aqi_value
-        }
-        
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
+        r = requests.get(url)
+        if r.status_code == 200:
+            return r.json()
+    except:
         return None
 
-# 6. دالة تحديد حالة جودة الهواء
-def get_aqi_status(aqi_value, lang):
-    _ = LANGS[lang]
-    if isinstance(aqi_value, (int, float)):
-        if aqi_value < 50:
-            return _["good"]
-        elif aqi_value < 100:
-            return _["moderate"]
-        else:
-            return _["poor"]
-    return ""
+def get_cosmic_time():
+    """الحصول على الوقت الكوني المنسق"""
+    now = datetime.now()
+    return now.strftime("%H:%M • %d %B %Y")
 
-# 7. الشريط الجانبي
+def create_gauge_chart(value, max_value, title):
+    """إنشاء مقياس دائري متطور"""
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = value,
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        title = {'text': title, 'font': {'color': 'white', 'size': 14}},
+        gauge = {
+            'axis': {'range': [None, max_value], 'tickwidth': 1, 'tickcolor': "white"},
+            'bar': {'color': "#4a90e2"},
+            'bgcolor': "rgba(0,0,0,0)",
+            'borderwidth': 2,
+            'bordercolor': "rgba(255,255,255,0.1)",
+            'steps': [
+                {'range': [0, max_value/2], 'color': 'rgba(74, 144, 226, 0.2)'},
+                {'range': [max_value/2, max_value], 'color': 'rgba(155, 89, 182, 0.2)'}
+            ],
+            'threshold': {
+                'line': {'color': "white", 'width': 4},
+                'thickness': 0.75,
+                'value': value
+            }
+        }
+    ))
+    
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font={'color': "white", 'family': "Space Grotesk"},
+        height=200,
+        margin=dict(l=20, r=20, t=50, b=20)
+    )
+    return fig
+
+# 5. تحميل الرسوم المتحركة
+lottie_galaxy = load_lottie_url("https://assets2.lottiefiles.com/packages/lf20_p8bfn5tk.json")
+lottie_weather = load_lottie_url("https://assets9.lottiefiles.com/packages/lf20_t0x0v9.json")
+
+# 6. الشريط الجانبي الفاخر
 with st.sidebar:
-    st.markdown("<h1 style='text-align:center;'>📱 Galaxy S26</h1>", unsafe_allow_html=True)
+    st.markdown("""
+        <div style="text-align: center; padding: 2rem 0;">
+            <h1 style="font-size: 2rem; background: linear-gradient(135deg, #fff, #a0b0ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                🌌 S26 Ultra
+            </h1>
+            <div class="cosmic-time">✨ Galaxy AI ✨</div>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # اختيار اللغة
-    selected_lang = st.selectbox("🌐 Language", ["ar", "en", "de", "fr"], index=["ar", "en", "de", "fr"].index(st.session_state.l))
-    st.session_state.l = selected_lang
-    _ = LANGS[st.session_state.l]
+    # اختيار اللغة مع تأثير
+    lang = st.selectbox(
+        "🌐",
+        ["ar", "en"],
+        format_func=lambda x: {"ar": "🇸🇦 العربية", "en": "🇬🇧 English"}[x],
+        label_visibility="collapsed"
+    )
+    st.session_state.l = lang
+    _ = LANGS[lang]
     
-    # إدخال المدينة
-    city = st.text_input(_["search"], "دبي")
+    # شريط بحث كوني
+    city = st.text_input(
+        _["search"], 
+        "دبي",
+        placeholder="مثال: دبي، لندن، نيويورك..."
+    )
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # رسوم متحركة
+    if lottie_galaxy:
+        st_lottie(lottie_galaxy, height=150, key="galaxy_anim")
     
     st.markdown("---")
     
-    # عرض الأيقونة المتحركة
-    if lottie_weather:
-        st_lottie(lottie_weather, height=150)
-    else:
-        st.markdown("☁️ Weather Animation")
+    # إعدادات سريعة
+    with st.expander("⚡ AI Settings", expanded=False):
+        st.slider("🎚️ AI Sensitivity", 0, 100, 50)
+        st.toggle("🤖 Smart Recommendations", value=True)
+        st.toggle("🌙 Night Mode", value=True)
 
-# 8. جلب وعرض البيانات
-weather_data = get_weather_data(city, st.session_state.l)
+# 7. دالة جلب بيانات متطورة
+@st.cache_data(ttl=300, show_spinner="🔄 جاري الاتصال بالمجرّة...")
+def get_galaxy_weather(city_name):
+    """جلب بيانات الطقس بتقنية Galaxy AI"""
+    try:
+        # البحث عن الموقع
+        geo = requests.get(
+            f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=1"
+        ).json()
+        
+        if 'results' not in geo:
+            return None
+            
+        loc = geo['results'][0]
+        
+        # جلب جميع البيانات في وقت واحد
+        weather = requests.get(
+            f"https://api.open-meteo.com/v1/forecast",
+            params={
+                'latitude': loc['latitude'],
+                'longitude': loc['longitude'],
+                'current': ['temperature_2m', 'relative_humidity_2m', 'apparent_temperature', 
+                           'weather_code', 'wind_speed_10m', 'wind_direction_10m', 
+                           'pressure_msl', 'surface_pressure', 'uv_index'],
+                'hourly': ['temperature_2m', 'relative_humidity_2m', 'weather_code'],
+                'daily': ['weather_code', 'temperature_2m_max', 'temperature_2m_min', 
+                         'sunrise', 'sunset', 'precipitation_probability_max'],
+                'timezone': 'auto'
+            }
+        ).json()
+        
+        # معالجة البيانات
+        return {
+            'city': loc['name'],
+            'country': loc.get('country', ''),
+            'lat': loc['latitude'],
+            'lon': loc['longitude'],
+            'current': weather['current'],
+            'hourly': weather['hourly'],
+            'daily': weather['daily']
+        }
+    except Exception as e:
+        st.error(f"⚠️ خطأ في الاتصال: {str(e)}")
+        return None
 
-if weather_data:
-    # عرض رأس الصفحة
-    current = weather_data['current']
+# 8. دالة تحليل AI
+def ai_recommendations(temp, humidity, uv):
+    """توصيات ذكية من Galaxy AI"""
+    recommendations = []
+    if temp > 30:
+        recommendations.append("🩳 ملابس صيفية خفيفة")
+        recommendations.append("🧴 استخدم واقي الشمس")
+    elif temp < 15:
+        recommendations.append("🧥 جاكيت دافئ")
+        recommendations.append("☕ مشروب ساخن")
+    
+    if uv > 6:
+        recommendations.append("🕶️ نظارة شمسية")
+    
+    if humidity > 70:
+        recommendations.append("💧 جفف شعرك جيداً")
+    
+    return recommendations if recommendations else ["✨ طقس مثالي لأي نشاط"]
+
+# 9. الواجهة الرئيسية
+if 'l' not in st.session_state:
+    st.session_state.l = 'ar'
+
+_ = LANGS[st.session_state.l]
+
+# عرض البيانات
+data = get_galaxy_weather(city)
+
+if data:
+    current = data['current']
+    
+    # Dynamic Island Header
     st.markdown(f"""
-        <div class="main-header">
-            <h1 style="font-size: 4rem; margin:0;">🌤️ {weather_data['city']}</h1>
-            <p style="font-size: 1.5rem; opacity: 0.9;">{weather_data['country']} | {current['temperature_2m']}°C</p>
+        <div class="dynamic-island">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span class="pulse-icon">🌍</span>
+                    <span style="color: white; font-size: 1.2rem; margin-left: 10px;">{data['city']}, {data['country']}</span>
+                </div>
+                <div class="cosmic-time">
+                    {get_cosmic_time()}
+                </div>
+            </div>
         </div>
     """, unsafe_allow_html=True)
-
-    # عرض البطاقات الرئيسية
-    col1, col2, col3, col4 = st.columns(4)
     
-    # تجهيز عناصر البطاقات
-    items = [
-        (_['temp'], f"{current['temperature_2m']}°", f"{_['feels']}: {current['apparent_temperature']}°"),
+    # العنوان الرئيسي
+    st.markdown(f"""
+        <div style="text-align: center; margin: 2rem 0;">
+            <div class="galaxy-title">{current['temperature_2m']}°</div>
+            <div style="color: rgba(255,255,255,0.7); font-size: 1.5rem;">
+                {_['feels']} {current['apparent_temperature']}°
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # بطاقات القياسات الرئيسية
+    cols = st.columns(4)
+    metrics = [
+        (_['temp'], f"{current['temperature_2m']}°", "🌡️"),
         (_['hum'], f"{current['relative_humidity_2m']}%", "💧"),
         (_['wind'], f"{current['wind_speed_10m']} km/h", "🌪️"),
-        (_['aqi'], f"{weather_data['aqi']}", get_aqi_status(weather_data['aqi'], st.session_state.l))
+        (_['uv'], f"{current['uv_index']}", "☢️")
     ]
     
-    # عرض البطاقات
-    for i, (lbl, val, sub) in enumerate(items):
-        with [col1, col2, col3, col4][i]:
-            st.markdown(f'''
-                <div class="glass-card">
-                    <div class="m-lbl">{lbl}</div>
-                    <div class="m-val">{val}</div>
-                    <div style="color:#777;">{sub}</div>
+    for idx, (label, value, icon) in enumerate(metrics):
+        with cols[idx]:
+            st.markdown(f"""
+                <div class="s26-card">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">{icon}</div>
+                    <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem; letter-spacing: 1px;">{label}</div>
+                    <div class="glow-value">{value}</div>
                 </div>
-            ''', unsafe_allow_html=True)
-
-    # إنشاء التبويبات
-    tab1, tab2 = st.tabs([_["forecast"], "📊 Analysis"])
+            """, unsafe_allow_html=True)
     
-    # تبويب التوقعات
+    # التبويبات المتطورة
+    tab1, tab2, tab3 = st.tabs([
+        "📅 " + _['forecast'], 
+        "🤖 AI Insights", 
+        "📊 Cosmic Analysis"
+    ])
+    
     with tab1:
-        for i in range(min(7, len(weather_data['daily']['time']))):
-            st.markdown(f'''
-                <div class="glass-card" style="text-align:right; padding:15px;">
-                    <b>{_['day']} {i+1}</b>: {weather_data['daily']['temperature_2m_max'][i]}° / {weather_data['daily']['temperature_2m_min'][i]}°
-                </div>
-            ''', unsafe_allow_html=True)
+        # توقعات 7 أيام
+        cols = st.columns(7)
+        for i, col in enumerate(cols):
+            with col:
+                day_name = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i % 7]
+                max_temp = data['daily']['temperature_2m_max'][i] if i < len(data['daily']['temperature_2m_max']) else "--"
+                min_temp = data['daily']['temperature_2m_min'][i] if i < len(data['daily']['temperature_2m_min']) else "--"
+                
+                st.markdown(f"""
+                    <div class="s26-card" style="padding: 1rem;">
+                        <div style="font-size: 1.2rem; color: white;">{day_name}</div>
+                        <div style="font-size: 2rem; color: #4a90e2;">{max_temp}°</div>
+                        <div style="color: rgba(255,255,255,0.5);">{min_temp}°</div>
+                    </div>
+                """, unsafe_allow_html=True)
     
-    # تبويب التحليل والرسوم البيانية
     with tab2:
-        if weather_data['hourly'] and 'time' in weather_data['hourly']:
-            # تجهيز بيانات الرسم البياني
-            hourly_data = pd.DataFrame({
-                'time': pd.to_datetime(weather_data['hourly']['time'][:24]),
-                'temperature': weather_data['hourly']['temperature_2m'][:24]
-            })
+        # توصيات AI
+        recs = ai_recommendations(
+            current['temperature_2m'],
+            current['relative_humidity_2m'],
+            current['uv_index']
+        )
+        
+        st.markdown("""
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: white; font-size: 2rem;">🤖 Galaxy AI Recommendations</h2>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        for rec in recs:
+            st.markdown(f"""
+                <div class="s26-card" style="margin: 0.5rem 0; padding: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="font-size: 2rem;">{rec.split()[0]}</span>
+                        <span style="color: white; font-size: 1.2rem;">{' '.join(rec.split()[1:])}</span>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+    
+    with tab3:
+        # رسم بياني متطور
+        if data['hourly']:
+            hours = pd.to_datetime(data['hourly']['time'][:24])
+            temps = data['hourly']['temperature_2m'][:24]
             
-            # إنشاء الرسم البياني
             fig = go.Figure()
             fig.add_trace(go.Scatter(
-                x=hourly_data['time'],
-                y=hourly_data['temperature'],
-                mode='lines',
+                x=hours,
+                y=temps,
+                mode='lines+markers',
                 name='Temperature',
-                line=dict(color='#1e3a8a', width=4),
+                line=dict(color='#4a90e2', width=4),
+                marker=dict(size=8, color='white', line=dict(width=2, color='#4a90e2')),
                 fill='tozeroy',
-                fillcolor='rgba(30, 58, 138, 0.2)'
+                fillcolor='rgba(74, 144, 226, 0.2)'
             ))
             
-            # تنسيق الرسم البياني
             fig.update_layout(
-                title='Temperature Forecast - Next 24 Hours',
-                xaxis_title='Time',
-                yaxis_title='Temperature (°C)',
+                title=dict(text="📈 24-Hour Temperature Trend", font=dict(color='white', size=20)),
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
-                margin=dict(l=40, r=40, t=40, b=40),
-                hovermode='x unified'
+                xaxis=dict(gridcolor='rgba(255,255,255,0.1)', title="Time", title_font=dict(color='white')),
+                yaxis=dict(gridcolor='rgba(255,255,255,0.1)', title="Temperature (°C)", title_font=dict(color='white')),
+                font=dict(color='white'),
+                hovermode='x'
             )
             
-            fig.update_xaxes(gridcolor='lightgray', gridwidth=1)
-            fig.update_yaxes(gridcolor='lightgray', gridwidth=1)
-            
             st.plotly_chart(fig, use_container_width=True)
-            
-            # إحصائيات سريعة
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Max Today", f"{max(weather_data['hourly']['temperature_2m'][:24])}°")
-            with col2:
-                st.metric("Min Today", f"{min(weather_data['hourly']['temperature_2m'][:24])}°")
-            with col3:
-                st.metric("Average", f"{sum(weather_data['hourly']['temperature_2m'][:24])/24:.1f}°")
-        else:
-            st.info("No hourly data available")
 
 else:
-    # عرض رسالة خطأ عند عدم العثور على المدينة
-    st.markdown(f'''
-        <div class="error-message">
-            <h2 style="color: #ff4444;">{_["not_found"]}</h2>
-            <p style="color: #666;">🔍 {city}</p>
+    # رسالة ترحيب متطورة
+    st.markdown("""
+        <div style="text-align: center; padding: 5rem;">
+            <h1 class="galaxy-title">🌌 Galaxy S26 Ultra</h1>
+            <p style="color: rgba(255,255,255,0.7); font-size: 1.5rem; margin: 2rem;">
+                أدخل اسم المدينة في الشريط الجانبي لاستكشاف الطقس بتقنية AI
+            </p>
         </div>
-    ''', unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+    
+    if lottie_weather:
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st_lottie(lottie_weather, height=300)
 
-# 9. التذييل
-st.markdown(f'''
-    <div style="text-align:center; color:#aaa; padding:30px; margin-top: 50px;">
-        {_["updated"]} Taher Weather Galaxy S26 • 2026
+# تذييل كوني
+st.markdown(f"""
+    <div class="cosmic-footer">
+        {_['updated']} Galaxy AI • {datetime.now().strftime('%Y')}
     </div>
-''', unsafe_allow_html=True)
+""", unsafe_allow_html=True)
