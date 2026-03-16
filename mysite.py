@@ -4,7 +4,6 @@ import requests
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime
-from streamlit_lottie import st_lottie
 import numpy as np
 
 # 1. إعداد الصفحة الفاخرة الفائقة (S26 Ultra Dynamic Island Style)
@@ -264,19 +263,44 @@ st.markdown("""
                      0 0 20px rgba(74, 144, 226, 0.3),
                      0 0 30px rgba(74, 144, 226, 0.1);
     }
+    
+    /* تأثير Lottie البديل */
+    .galaxy-sphere {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto;
+        background: radial-gradient(circle at 30% 30%, #4a90e2, #9b59b6);
+        border-radius: 50%;
+        animation: floatSphere 3s ease-in-out infinite;
+        box-shadow: 0 0 50px #4a90e2, 0 0 100px #9b59b6;
+        position: relative;
+    }
+    
+    .galaxy-sphere::after {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: pulseGlow 2s ease-in-out infinite;
+    }
+    
+    @keyframes floatSphere {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-20px) scale(1.05); }
+    }
+    
+    @keyframes pulseGlow {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 1; }
+    }
     </style>
 """, unsafe_allow_html=True)
 
 # 4. دوال مساعدة متطورة
-def load_lottie_url(url):
-    """تحميل رسوم متحركة Lottio مع تأثيرات"""
-    try:
-        r = requests.get(url)
-        if r.status_code == 200:
-            return r.json()
-    except:
-        return None
-
 def get_cosmic_time():
     """الحصول على الوقت الكوني المنسق"""
     now = datetime.now()
@@ -316,11 +340,7 @@ def create_gauge_chart(value, max_value, title):
     )
     return fig
 
-# 5. تحميل الرسوم المتحركة
-lottie_galaxy = load_lottie_url("https://assets2.lottiefiles.com/packages/lf20_p8bfn5tk.json")
-lottie_weather = load_lottie_url("https://assets9.lottiefiles.com/packages/lf20_t0x0v9.json")
-
-# 6. الشريط الجانبي الفاخر
+# 5. الشريط الجانبي الفاخر
 with st.sidebar:
     st.markdown("""
         <div style="text-align: center; padding: 2rem 0;">
@@ -350,9 +370,16 @@ with st.sidebar:
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # رسوم متحركة
-    if lottie_galaxy:
-        st_lottie(lottie_galaxy, height=150, key="galaxy_anim")
+    # تأثير Lottie البديل (بدون مكتبة خارجية)
+    st.markdown("""
+        <div style="text-align: center; padding: 20px;">
+            <div class="galaxy-sphere"></div>
+            <p style="color: rgba(255,255,255,0.7); margin-top: 20px; font-size: 1.2rem; 
+                      text-shadow: 0 0 20px #4a90e2;">
+                ✦ Galaxy AI Live ✦
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -362,7 +389,7 @@ with st.sidebar:
         st.toggle("🤖 Smart Recommendations", value=True)
         st.toggle("🌙 Night Mode", value=True)
 
-# 7. دالة جلب بيانات متطورة
+# 6. دالة جلب بيانات متطورة
 @st.cache_data(ttl=300, show_spinner="🔄 جاري الاتصال بالمجرّة...")
 def get_galaxy_weather(city_name):
     """جلب بيانات الطقس بتقنية Galaxy AI"""
@@ -407,7 +434,7 @@ def get_galaxy_weather(city_name):
         st.error(f"⚠️ خطأ في الاتصال: {str(e)}")
         return None
 
-# 8. دالة تحليل AI
+# 7. دالة تحليل AI
 def ai_recommendations(temp, humidity, uv):
     """توصيات ذكية من Galaxy AI"""
     recommendations = []
@@ -426,7 +453,7 @@ def ai_recommendations(temp, humidity, uv):
     
     return recommendations if recommendations else ["✨ طقس مثالي لأي نشاط"]
 
-# 9. الواجهة الرئيسية
+# 8. الواجهة الرئيسية
 if 'l' not in st.session_state:
     st.session_state.l = 'ar'
 
@@ -571,10 +598,12 @@ else:
         </div>
     """, unsafe_allow_html=True)
     
-    if lottie_weather:
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st_lottie(lottie_weather, height=300)
+    # تأثير بصري بديل في الصفحة الرئيسية
+    st.markdown("""
+        <div style="display: flex; justify-content: center; margin: 3rem 0;">
+            <div class="galaxy-sphere" style="width: 200px; height: 200px;"></div>
+        </div>
+    """, unsafe_allow_html=True)
 
 # تذييل كوني
 st.markdown(f"""
