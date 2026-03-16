@@ -3,6 +3,3 @@ requests
 pandas
 plotly
 numpy
-pillow
-python-dateutil
-pytz
