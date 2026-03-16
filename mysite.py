@@ -1,60 +1,71 @@
-# ... (الجزء العلوي من كودك يبقى كما هو بدون تغيير)
+import streamlit as st
+import requests
+import pandas as pd
+import plotly.graph_objects as go
+from datetime import datetime
 
-        # شروق وغروب الشمس - هذا هو الجزء الذي كان يحتوي على الخطأ في السطر 421
-        col1, col2 = st.columns(2)
-        with col1:
-            # تم تصحيح السطر 421 هنا بإزالة الرمز المسبب للمشكلة
-            st.markdown(f"""
-                <div class="sun-card">
-                    <div class="metric-label" style="color: white; opacity: 0.9;">الشروق</div>
-                    <div class="metric-value" style="color: white;">{datetime.fromisoformat(daily['sunrise'][0]).strftime('%I:%M %p')}</div>
-                </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown(f"""
-                <div class="sun-card" style="background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);">
-                    <div class="metric-label" style="color: white; opacity: 0.9;">الغروب</div>
-                    <div class="metric-value" style="color: white;">{datetime.fromisoformat(daily['sunset'][0]).strftime('%I:%M %p')}</div>
-                </div>
-            """, unsafe_allow_html=True)
+# 1. إعداد الصفحة
+st.set_page_config(page_title="طاهر | الطقس الذكي", page_icon="🌤️", layout="wide")
 
-    with tab2:
-        st.markdown("### 🗓️ توقعات الأيام السبعة القادمة")
-        df_daily = pd.DataFrame({
-            "التاريخ": [datetime.fromisoformat(t).strftime('%Y-%m-%d') for t in daily['time']],
-            "الحرارة القصوى (°C)": daily['temperature_2m_max'],
-            "الحرارة الدنيا (°C)": daily['temperature_2m_min'],
-            "الأمطار (مم)": daily['precipitation_sum'],
-            "مؤشر UV": daily['uv_index_max']
-        })
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=df_daily["التاريخ"], y=df_daily["الحرارة القصوى (°C)"], name="العظمى", line=dict(color='#ff4b4b', width=4)))
-        fig.add_trace(go.Scatter(x=df_daily["التاريخ"], y=df_daily["الحرارة الدنيا (°C)"], name="الصغرى", line=dict(color='#1c83e1', width=4)))
-        fig.update_layout(title="تذبذب درجات الحرارة خلال الأسبوع", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig, use_container_width=True)
-        st.table(df_daily)
+# 2. تصميم الواجهة (CSS)
+st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;700&display=swap');
+    * { font-family: 'IBM Plex Sans Arabic', sans-serif; }
+    .main-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem; border-radius: 20px; color: white; text-align: center; margin-bottom: 2rem;
+    }
+    .weather-card {
+        background: white; padding: 1.5rem; border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08); text-align: center; margin-bottom: 1rem;
+    }
+    .metric-value { font-size: 2.2rem; font-weight: 700; color: #1e3a8a; }
+    .sun-card {
+        background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+        color: white; padding: 1.5rem; border-radius: 20px; text-align: center;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-    with tab3:
-        st.markdown("### 🌡️ تفاصيل تقنية إضافية")
-        c1, c2, c3 = st.columns(3)
-        c1.metric("الرؤية", f"{current['visibility'] / 1000} كم")
-        c2.metric("مؤشر UV اليوم", daily['uv_index_max'][0])
-        c3.metric("كمية الأمطار المتوقعة", f"{daily['precipitation_sum'][0]} مم")
+st.markdown('<div class="main-header"><h1>🌤️ مركز طاهر للأرصاد الجوية</h1></div>', unsafe_allow_html=True)
 
-    with tab4:
-        st.markdown("### 🎯 التوصيات")
-        temp = current['temperature_2m']
-        if temp > 30:
-            st.warning("⚠️ الجو حار جداً")
-        elif temp < 15:
-            st.info("🧥 الجو بارد")
-        else:
-            st.success("🌤️ الجو مثالي")
+# 3. دالة جلب البيانات
+@st.cache_data(ttl=300)
+def get_weather(city_name):
+    try:
+        geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=1&language=ar"
+        geo_res = requests.get(geo_url).json()
+        if 'results' in geo_res:
+            loc = geo_res['results'][0]
+            w_url = f"https://api.open-meteo.com/v1/forecast?latitude={loc['latitude']}&longitude={loc['longitude']}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,pressure_msl&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto"
+            return requests.get(w_url).json(), loc['name']
+    except: return None, None
+    return None, None
 
-else:
-    st.info("💡 أدخل اسم مدينة في الشريط الجانبي لبدء عرض بيانات الطقس.")
+city = st.sidebar.text_input("🔍 ابحث عن مدينة:", "Witten")
+data, city_full_name = get_weather(city)
 
-st.markdown("---")
-st.markdown("<center style='color: #666;'>تم التطوير بواسطة <b>طاهر</b> | 2026</center>", unsafe_allow_html=True)
+# 4. عرض البيانات (مع معالجة أخطاء KeyError و Indentation)
+if data and 'current' in data:
+    curr = data['current']
+    daily = data['daily']
+
+    tab1, tab2, tab3 = st.tabs(["📊 اليوم", "🗓️ الأسبوع", "💡 نصائح"])
+
+    with tab1:
+        # قسم الفيديو
+        st.subheader(f"📺 الأجواء في {city_full_name}")
+        v_url = "https://www.w3schools.com/html/mov_bbb.mp4" if curr['weather_code'] == 0 else "https://v.ftcdn.net/02/10/33/21/700_F_210332152_m6p6oT7fU6AAYkP7XWvXvB9B0A3JjV5m_ST.mp4"
+        st.video(v_url)
+
+        # بطاقات البيانات
+        c1, c2, c3, c4 = st.columns(4)
+        c1.markdown(f'<div class="weather-card">🌡️ حرارة<br><div class="metric-value">{curr["temperature_2m"]}°C</div></div>', unsafe_allow_html=True)
+        c2.markdown(f'<div class="weather-card">💧 رطوبة<br><div class="metric-value">{curr["relative_humidity_2m"]}%</div></div>', unsafe_allow_html=True)
+        c3.markdown(f'<div class="weather-card">🌬️ رياح<br><div class="metric-value">{curr["wind_speed_10m"]}</div></div>', unsafe_allow_html=True)
+        c4.markdown(f'<div class="weather-card">⏲️ ضغط<br><div class="metric-value">{int(curr["pressure_msl"])}</div></div>', unsafe_allow_html=True)
+
+        # تصحيح سطر الشروق والغروب (السطر 421 سابقاً)
+        st.divider()
+        sc1, sc2 = st.columns(
