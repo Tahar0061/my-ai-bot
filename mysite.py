@@ -418,7 +418,7 @@ if data:
         with col1:
             st.markdown(f"""
                 <div class="sun-card">
-                   st.markdown("<div>\u2600\ufe0f شروق الشمس</div>", unsafe_allow_html=True)
+                  st.markdown('<div class="sun-card">🌅 الشروق</div>', unsafe_allow_html=True)
                     <div class="metric-value" style="color: white;">{datetime.fromisoformat(daily['sunrise'][0]).strftime('%I:%M %p')}</div>
                 </div>
             """, unsafe_allow_html=True)
