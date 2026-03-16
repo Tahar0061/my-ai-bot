@@ -1,5 +1,9 @@
-streamlit
-requests
-pandas
-plotly
-numpy
+streamlit>=1.41.0
+requests>=2.32.0
+pandas>=2.2.0
+plotly>=6.0.0
+numpy>=2.2.0
+pillow>=11.0.0
+python-dateutil>=2.9.0
+pytz>=2025.0
+protobuf>=5.0.0
