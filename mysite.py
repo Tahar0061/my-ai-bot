@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. نظام اللغات العالمي مع تأثيرات بصرية
+# 2. نظام اللغات العالمي
 LANGS = {
     "ar": {
         "search": "🔍 بحث كوني:", 
@@ -56,7 +56,7 @@ LANGS = {
     }
 }
 
-# 3. تأثيرات بصرية متطورة (Dynamic Island Effects)
+# 3. تأثيرات بصرية متطورة
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap');
@@ -68,14 +68,12 @@ st.markdown("""
         box-sizing: border-box;
     }
     
-    /* خلفية ديناميكية متحركة */
     .stApp {
         background: radial-gradient(ellipse at 20% 30%, #0a0f1e, #000000);
         position: relative;
         overflow: hidden;
     }
     
-    /* تأثير النجوم المتحركة */
     .stApp::before {
         content: '';
         position: fixed;
@@ -93,7 +91,6 @@ st.markdown("""
         to { transform: translateY(-500px); }
     }
     
-    /* Dynamic Island Header */
     .dynamic-island {
         background: rgba(20, 30, 50, 0.3);
         backdrop-filter: blur(20px) saturate(180%);
@@ -112,7 +109,6 @@ st.markdown("""
         100% { transform: translateY(0) scale(1); opacity: 1; }
     }
     
-    /* بطاقات زجاجية فائقة مع تأثير ثلاثي الأبعاد */
     .s26-card {
         background: linear-gradient(145deg, 
             rgba(255, 255, 255, 0.1) 0%, 
@@ -159,7 +155,6 @@ st.markdown("""
         to { transform: rotate(360deg); }
     }
     
-    /* قيم رقمية متوهجة */
     .glow-value {
         font-size: 4rem;
         font-weight: 800;
@@ -170,7 +165,6 @@ st.markdown("""
         line-height: 1.2;
     }
     
-    /* عناوين متألقة */
     .galaxy-title {
         font-size: 5rem;
         font-weight: 800;
@@ -187,7 +181,6 @@ st.markdown("""
         50% { filter: brightness(1.2); }
     }
     
-    /* توقيت كوني */
     .cosmic-time {
         background: rgba(255, 255, 255, 0.03);
         border-radius: 100px;
@@ -199,19 +192,6 @@ st.markdown("""
         backdrop-filter: blur(10px);
     }
     
-    /* شريط تقدم دائري */
-    .circular-progress {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        background: conic-gradient(#4a90e2 0deg 180deg, #2c3e50 180deg 360deg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto;
-    }
-    
-    /* تذييل متطور */
     .cosmic-footer {
         text-align: center;
         padding: 2rem;
@@ -223,7 +203,6 @@ st.markdown("""
         margin-top: 3rem;
     }
     
-    /* أيقونات متحركة */
     .pulse-icon {
         animation: pulse 2s ease-in-out infinite;
         display: inline-block;
@@ -234,14 +213,12 @@ st.markdown("""
         50% { transform: scale(1.1); opacity: 0.8; }
     }
     
-    /* شريط جانبي زجاجي */
     .css-1d391kg, .css-12oz5g7 {
         background: rgba(10, 15, 25, 0.7) !important;
         backdrop-filter: blur(20px) !important;
         border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
     
-    /* تخصيص الـ scrollbar */
     ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
@@ -257,14 +234,12 @@ st.markdown("""
         border-radius: 10px;
     }
     
-    /* تأثير الظل النيون */
     .neon-glow {
         text-shadow: 0 0 10px rgba(74, 144, 226, 0.5),
                      0 0 20px rgba(74, 144, 226, 0.3),
                      0 0 30px rgba(74, 144, 226, 0.1);
     }
     
-    /* تأثير Lottie البديل */
     .galaxy-sphere {
         width: 150px;
         height: 150px;
@@ -300,143 +275,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. دوال مساعدة متطورة
+# 4. دوال مساعدة
 def get_cosmic_time():
-    """الحصول على الوقت الكوني المنسق"""
     now = datetime.now()
     return now.strftime("%H:%M • %d %B %Y")
 
-def create_gauge_chart(value, max_value, title):
-    """إنشاء مقياس دائري متطور"""
-    fig = go.Figure(go.Indicator(
-        mode = "gauge+number",
-        value = value,
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': title, 'font': {'color': 'white', 'size': 14}},
-        gauge = {
-            'axis': {'range': [None, max_value], 'tickwidth': 1, 'tickcolor': "white"},
-            'bar': {'color': "#4a90e2"},
-            'bgcolor': "rgba(0,0,0,0)",
-            'borderwidth': 2,
-            'bordercolor': "rgba(255,255,255,0.1)",
-            'steps': [
-                {'range': [0, max_value/2], 'color': 'rgba(74, 144, 226, 0.2)'},
-                {'range': [max_value/2, max_value], 'color': 'rgba(155, 89, 182, 0.2)'}
-            ],
-            'threshold': {
-                'line': {'color': "white", 'width': 4},
-                'thickness': 0.75,
-                'value': value
-            }
-        }
-    ))
-    
-    fig.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font={'color': "white", 'family': "Space Grotesk"},
-        height=200,
-        margin=dict(l=20, r=20, t=50, b=20)
-    )
-    return fig
-
-# 5. الشريط الجانبي الفاخر
-with st.sidebar:
-    st.markdown("""
-        <div style="text-align: center; padding: 2rem 0;">
-            <h1 style="font-size: 2rem; background: linear-gradient(135deg, #fff, #a0b0ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                🌌 S26 Ultra
-            </h1>
-            <div class="cosmic-time">✨ Galaxy AI ✨</div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # اختيار اللغة مع تأثير
-    lang = st.selectbox(
-        "🌐",
-        ["ar", "en"],
-        format_func=lambda x: {"ar": "🇸🇦 العربية", "en": "🇬🇧 English"}[x],
-        label_visibility="collapsed"
-    )
-    st.session_state.l = lang
-    _ = LANGS[lang]
-    
-    # شريط بحث كوني
-    city = st.text_input(
-        _["search"], 
-        "دبي",
-        placeholder="مثال: دبي، لندن، نيويورك..."
-    )
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # تأثير Lottie البديل (بدون مكتبة خارجية)
-    st.markdown("""
-        <div style="text-align: center; padding: 20px;">
-            <div class="galaxy-sphere"></div>
-            <p style="color: rgba(255,255,255,0.7); margin-top: 20px; font-size: 1.2rem; 
-                      text-shadow: 0 0 20px #4a90e2;">
-                ✦ Galaxy AI Live ✦
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    # إعدادات سريعة
-    with st.expander("⚡ AI Settings", expanded=False):
-        st.slider("🎚️ AI Sensitivity", 0, 100, 50)
-        st.toggle("🤖 Smart Recommendations", value=True)
-        st.toggle("🌙 Night Mode", value=True)
-
-# 6. دالة جلب بيانات متطورة
-@st.cache_data(ttl=300, show_spinner="🔄 جاري الاتصال بالمجرّة...")
-def get_galaxy_weather(city_name):
-    """جلب بيانات الطقس بتقنية Galaxy AI"""
-    try:
-        # البحث عن الموقع
-        geo = requests.get(
-            f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=1"
-        ).json()
-        
-        if 'results' not in geo:
-            return None
-            
-        loc = geo['results'][0]
-        
-        # جلب جميع البيانات في وقت واحد
-        weather = requests.get(
-            f"https://api.open-meteo.com/v1/forecast",
-            params={
-                'latitude': loc['latitude'],
-                'longitude': loc['longitude'],
-                'current': ['temperature_2m', 'relative_humidity_2m', 'apparent_temperature', 
-                           'weather_code', 'wind_speed_10m', 'wind_direction_10m', 
-                           'pressure_msl', 'surface_pressure', 'uv_index'],
-                'hourly': ['temperature_2m', 'relative_humidity_2m', 'weather_code'],
-                'daily': ['weather_code', 'temperature_2m_max', 'temperature_2m_min', 
-                         'sunrise', 'sunset', 'precipitation_probability_max'],
-                'timezone': 'auto'
-            }
-        ).json()
-        
-        # معالجة البيانات
-        return {
-            'city': loc['name'],
-            'country': loc.get('country', ''),
-            'lat': loc['latitude'],
-            'lon': loc['longitude'],
-            'current': weather['current'],
-            'hourly': weather['hourly'],
-            'daily': weather['daily']
-        }
-    except Exception as e:
-        st.error(f"⚠️ خطأ في الاتصال: {str(e)}")
-        return None
-
-# 7. دالة تحليل AI
 def ai_recommendations(temp, humidity, uv):
-    """توصيات ذكية من Galaxy AI"""
     recommendations = []
     if temp > 30:
         recommendations.append("🩳 ملابس صيفية خفيفة")
@@ -453,13 +297,98 @@ def ai_recommendations(temp, humidity, uv):
     
     return recommendations if recommendations else ["✨ طقس مثالي لأي نشاط"]
 
-# 8. الواجهة الرئيسية
+# 5. الشريط الجانبي
+with st.sidebar:
+    st.markdown("""
+        <div style="text-align: center; padding: 2rem 0;">
+            <h1 style="font-size: 2rem; background: linear-gradient(135deg, #fff, #a0b0ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                🌌 S26 Ultra
+            </h1>
+            <div class="cosmic-time">✨ Galaxy AI ✨</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    lang = st.selectbox(
+        "🌐",
+        ["ar", "en"],
+        format_func=lambda x: {"ar": "🇸🇦 العربية", "en": "🇬🇧 English"}[x],
+        label_visibility="collapsed"
+    )
+    st.session_state.l = lang
+    _ = LANGS[lang]
+    
+    city = st.text_input(
+        _["search"], 
+        "دبي",
+        placeholder="مثال: دبي، لندن، نيويورك..."
+    )
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    st.markdown("""
+        <div style="text-align: center; padding: 20px;">
+            <div class="galaxy-sphere"></div>
+            <p style="color: rgba(255,255,255,0.7); margin-top: 20px; font-size: 1.2rem; 
+                      text-shadow: 0 0 20px #4a90e2;">
+                ✦ Galaxy AI Live ✦
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    with st.expander("⚡ AI Settings", expanded=False):
+        st.slider("🎚️ AI Sensitivity", 0, 100, 50)
+        st.toggle("🤖 Smart Recommendations", value=True)
+        st.toggle("🌙 Night Mode", value=True)
+
+# 6. دالة جلب البيانات
+@st.cache_data(ttl=300, show_spinner="🔄 جاري الاتصال بالمجرّة...")
+def get_galaxy_weather(city_name):
+    try:
+        geo = requests.get(
+            f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}&count=1"
+        ).json()
+        
+        if 'results' not in geo:
+            return None
+            
+        loc = geo['results'][0]
+        
+        weather = requests.get(
+            f"https://api.open-meteo.com/v1/forecast",
+            params={
+                'latitude': loc['latitude'],
+                'longitude': loc['longitude'],
+                'current': ['temperature_2m', 'relative_humidity_2m', 'apparent_temperature', 
+                           'weather_code', 'wind_speed_10m', 'wind_direction_10m', 
+                           'pressure_msl', 'surface_pressure', 'uv_index'],
+                'hourly': ['temperature_2m', 'relative_humidity_2m', 'weather_code'],
+                'daily': ['weather_code', 'temperature_2m_max', 'temperature_2m_min', 
+                         'sunrise', 'sunset', 'precipitation_probability_max'],
+                'timezone': 'auto'
+            }
+        ).json()
+        
+        return {
+            'city': loc['name'],
+            'country': loc.get('country', ''),
+            'lat': loc['latitude'],
+            'lon': loc['longitude'],
+            'current': weather['current'],
+            'hourly': weather['hourly'],
+            'daily': weather['daily']
+        }
+    except Exception as e:
+        st.error(f"⚠️ خطأ في الاتصال: {str(e)}")
+        return None
+
+# 7. الواجهة الرئيسية
 if 'l' not in st.session_state:
     st.session_state.l = 'ar'
 
 _ = LANGS[st.session_state.l]
 
-# عرض البيانات
 data = get_galaxy_weather(city)
 
 if data:
