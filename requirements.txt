@@ -1,10 +1,4 @@
-streamlit
+streamlit-lottie
+plotly
 requests
 pandas
-plotly
-streamlit-lottie
-numpy
-pillow
-python-dateutil
-pytz
-protobuf
