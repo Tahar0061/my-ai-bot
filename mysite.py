@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-AI Predictor Germany 2026 - Ultra-Professional Edition (Enhanced)
+AI Predictor Germany 2026 - Ultra-Professional Edition (Enhanced & Fixed)
 Developed for next-gen hardware and high-performance analysis.
 """
 
@@ -396,12 +396,12 @@ with st.sidebar:
         None, [t['home'], t['lotto'], t['euro'], t['stats'], t['settings']],
         icons=['house-fill', 'dice-6-fill', 'globe-europe-africa', 'bar-chart-line-fill', 'cpu-fill'],
         menu_icon="cast", default_index=0,
-        styles={{
+        styles={
             "container": {"padding": "10px!important", "background-color": "transparent"},
             "icon": {"color": "var(--primary)", "font-size": "1.3rem"}, 
             "nav-link": {"color": "#aaa", "font-size": "1rem", "padding": "15px", "text-align": "left", "margin":"5px 0", "border-radius": "12px"},
             "nav-link-selected": {"background-color": "rgba(0, 242, 254, 0.15)", "color": "white", "font-weight": "bold", "border-left": "4px solid var(--primary)"},
-        }}
+        }
     )
 
 # ==================== PAGES ====================
@@ -433,11 +433,11 @@ if menu == t['home']:
         """, unsafe_allow_html=True)
 
     st.markdown(f"### 📍 {t['map_title']}")
-    map_data = pd.DataFrame({{
+    map_data = pd.DataFrame({
         'lat': np.random.uniform(47.2, 55.0, 50),
         'lon': np.random.uniform(5.8, 15.0, 50),
         'winners': np.random.randint(1, 10, 50)
-    }})
+    })
     st.map(map_data, size='winners', color='#00f2fe')
 
 elif menu == t['lotto']:
