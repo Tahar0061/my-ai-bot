@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-AI Predictor Germany 2026 - Ultra-Professional Edition (Integrated & Fixed)
+AI Predictor Germany 2026 - Ultra-Professional Edition (Full Fixed)
 Developed for next-gen hardware and high-performance analysis.
 """
 
@@ -204,7 +204,7 @@ TRANS = {
 
 t = TRANS[st.session_state.language]
 
-# ==================== ADVANCED CSS (ENHANCED TOP SETTINGS) ====================
+# ==================== ADVANCED CSS (FIXED 2026) ====================
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Cairo:wght@400;700;900&display=swap');
@@ -218,17 +218,6 @@ st.markdown(f"""
 
     * {{ font-family: 'Orbitron', 'Cairo', sans-serif; }}
     .stApp {{ background: radial-gradient(circle at top right, #1a1f35, var(--bg)); color: #e0e0e0; }}
-
-    /* Top Navigation Dropdown */
-    .top-settings-container {{
-        background: rgba(10, 20, 40, 0.9);
-        border-bottom: 1px solid var(--primary);
-        padding: 10px 20px;
-        position: sticky;
-        top: 0;
-        z-index: 999;
-        backdrop-filter: blur(10px);
-    }}
 
     /* Ticker Styling */
     .ticker-container {{
@@ -351,11 +340,6 @@ engine = QuantumPredictor()
 with st.sidebar:
     st.markdown(f"<div style='text-align: center; padding: 40px 0;'><h1 style='color: var(--primary);'>QUANTUM</h1><p style='color: #555; letter-spacing: 5px;'>v2.6 CORE</p></div>", unsafe_allow_html=True)
     
-    def cleanup_session():
-        st.session_state.lotto_pred = None
-        st.session_state.euro_pred = None
-        st.session_state.last_cleanup = datetime.now()
-    
     if st.button("🎯 " + t['presentation_mode'], use_container_width=True):
         st.session_state.presentation_mode = not st.session_state.presentation_mode
     
@@ -396,7 +380,18 @@ elif menu == t['lotto']:
                     st.session_state.lotto_pred = engine.generate_prediction('lotto')
         if st.session_state.lotto_pred:
             p = st.session_state.lotto_pred
-            st.markdown(f"<div class='glass-card' style='text-align: center;'><h2 style='color: var(--accent); font-size: 2.5rem;'>{t['confidence']}: {p['confidence']}%</h2><div class='ball-container'>{' '.join([f'<div class=\"ball\">{n}</div>' for n in p['main']])}<div class='ball special'>{p['super']}</div></div><p style='color: #666;'>{t['last_update']}: {datetime.now().strftime('%H:%M:%S')}</p></div>", unsafe_allow_html=True)
+            # FIXED: Removed backslashes from f-string to prevent SyntaxError
+            balls_html = "".join([f'<div class="ball">{n}</div>' for n in p['main']])
+            st.markdown(f"""
+                <div class='glass-card' style='text-align: center;'>
+                    <h2 style='color: var(--accent); font-size: 2.5rem;'>{t['confidence']}: {p['confidence']}%</h2>
+                    <div class='ball-container'>
+                        {balls_html}
+                        <div class='ball special'>{p['super']}</div>
+                    </div>
+                    <p style='color: #666;'>{t['last_update']}: {datetime.now().strftime('%H:%M:%S')}</p>
+                </div>
+            """, unsafe_allow_html=True)
 
 elif menu == t['euro']:
     st.markdown(f"<h1 style='text-align:center; padding: 40px;'>{t['euro']}</h1>", unsafe_allow_html=True)
@@ -408,7 +403,18 @@ elif menu == t['euro']:
                     st.session_state.euro_pred = engine.generate_prediction('euro')
         if st.session_state.euro_pred:
             p = st.session_state.euro_pred
-            st.markdown(f"<div class='glass-card' style='text-align: center;'><h2 style='color: var(--accent); font-size: 2.5rem;'>{t['confidence']}: {p['confidence']}%</h2><h4 style='margin-top:30px; color: var(--primary);'>{t['main_nums']}</h4><div class='ball-container'>{' '.join([f'<div class=\"ball\">{n}</div>' for n in p['main']])}</div><h4 style='margin-top:30px; color: var(--accent);'>{t['euro_nums']}</h4><div class='ball-container'>{' '.join([f'<div class=\"ball special\">{n}</div>' for n in p['extra']])}</div></div>", unsafe_allow_html=True)
+            # FIXED: Removed backslashes from f-string to prevent SyntaxError
+            main_balls_html = "".join([f'<div class="ball">{n}</div>' for n in p['main']])
+            extra_balls_html = "".join([f'<div class="ball special">{n}</div>' for n in p['extra']])
+            st.markdown(f"""
+                <div class='glass-card' style='text-align: center;'>
+                    <h2 style='color: var(--accent); font-size: 2.5rem;'>{t['confidence']}: {p['confidence']}%</h2>
+                    <h4 style='margin-top:30px; color: var(--primary);'>{t['main_nums']}</h4>
+                    <div class='ball-container'>{main_balls_html}</div>
+                    <h4 style='margin-top:30px; color: var(--accent);'>{t['euro_nums']}</h4>
+                    <div class='ball-container'>{extra_balls_html}</div>
+                </div>
+            """, unsafe_allow_html=True)
 
 elif menu == t['stats']:
     st.markdown(f"<h1 style='text-align:center; padding: 40px;'>{t['stats']}</h1>", unsafe_allow_html=True)
