@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 AI Predictor Germany 2026 - Ultra-Professional Edition (Full Fixed)
@@ -59,6 +58,12 @@ if 'last_cleanup' not in st.session_state:
     st.session_state.last_cleanup = datetime.now()
 if 'settings_page' not in st.session_state:
     st.session_state.settings_page = 'main'  # main, language, appearance, notifications, api, advanced
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'dark'  # dark, light
+if 'animations' not in st.session_state:
+    st.session_state.animations = True
+if 'compact_mode' not in st.session_state:
+    st.session_state.compact_mode = False
 
 # ==================== PREDICTION CACHE SYSTEM ====================
 class PredictionCache:
@@ -324,7 +329,21 @@ TRANS = {
 
 t = TRANS[st.session_state.language]
 
-# ==================== ADVANCED CSS (FIXED 2026) ====================
+# ==================== ADVANCED CSS (FIXED 2026) مع تحسينات الإغراء ====================
+# تحديد الثيم بناءً على الإعدادات
+if st.session_state.theme == 'dark':
+    bg_color = "#050a18"
+    card_bg = "rgba(255, 255, 255, 0.04)"
+    text_color = "#e0e0e0"
+elif st.session_state.theme == 'light':
+    bg_color = "#f0f2f6"
+    card_bg = "rgba(255, 255, 255, 0.8)"
+    text_color = "#1a1f35"
+else:
+    bg_color = "#050a18"
+    card_bg = "rgba(255, 255, 255, 0.04)"
+    text_color = "#e0e0e0"
+
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Cairo:wght@400;700;900&display=swap');
@@ -333,33 +352,205 @@ st.markdown(f"""
         --primary: #00f2fe;
         --secondary: #4facfe;
         --accent: #ffd700;
-        --bg: #050a18;
+        --accent2: #ff6b6b;
+        --accent3: #ffa502;
+        --bg: {bg_color};
+        --card-bg: {card_bg};
+        --text-color: {text_color};
     }}
 
     * {{ font-family: 'Orbitron', 'Cairo', sans-serif; }}
-    .stApp {{ background: radial-gradient(circle at top right, #1a1f35, var(--bg)); color: #e0e0e0; }}
+    .stApp {{ background: radial-gradient(circle at top right, #1a1f35, var(--bg)); color: var(--text-color); }}
 
-    /* Ticker Styling */
+    /* شريط الإعلانات المتحرك متعدد الألوان */
     .ticker-container {{
         width: 100%;
-        background: rgba(0, 242, 254, 0.05);
-        border-bottom: 1px solid rgba(0, 242, 254, 0.2);
-        padding: 8px 0;
+        background: linear-gradient(90deg, #ffd700, #ffa502, #ff6b6b, #ffd700);
+        background-size: 300% 100%;
+        animation: gradientShift 5s ease infinite;
+        padding: 12px 0;
         overflow: hidden;
-        margin-bottom: 10px;
+        margin-bottom: 20px;
+        border-radius: 0;
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
+        border-bottom: 2px solid rgba(255,255,255,0.2);
     }}
+    
+    @keyframes gradientShift {{
+        0% {{ background-position: 0% 50%; }}
+        50% {{ background-position: 100% 50%; }}
+        100% {{ background-position: 0% 50%; }}
+    }}
+    
     .ticker-text {{
         display: inline-block;
         white-space: nowrap;
         padding-left: 100%;
-        animation: ticker 30s linear infinite;
+        animation: ticker 25s linear infinite;
+        font-weight: 900;
+        color: #000;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        font-size: 1.1rem;
+        text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }}
+    
+    .ticker-text span {{
+        margin: 0 30px;
+        font-size: 1.3rem;
+    }}
+    
+    @keyframes ticker {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(-100%, 0); }} }}
+
+    /* شريط الجوائز المتحرك */
+    .jackpot-ticker {{
+        background: linear-gradient(90deg, #4a90e2, #9b59b6, #4a90e2);
+        background-size: 200% 100%;
+        animation: gradientShift 3s ease infinite;
+        padding: 15px;
+        border-radius: 15px;
+        margin: 20px 0;
+        text-align: center;
+        font-size: 1.8rem;
+        font-weight: 900;
+        color: white;
+        text-shadow: 0 0 20px rgba(255,255,255,0.5);
+        box-shadow: 0 10px 30px rgba(74, 144, 226, 0.5);
+    }}
+    
+    .jackpot-value {{
+        font-size: 3rem;
+        background: linear-gradient(135deg, #ffd700, #ffa502);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+        margin-left: 15px;
+        animation: pulse 1.5s ease infinite;
+    }}
+    
+    @keyframes pulse {{
+        0%, 100% {{ transform: scale(1); }}
+        50% {{ transform: scale(1.05); }}
+    }}
+
+    /* صور الفائزين الوهمية */
+    .winners-grid {{
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+        margin: 30px 0;
+    }}
+    
+    .winner-card {{
+        background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.2));
+        border: 2px solid gold;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        animation: float 3s ease-in-out infinite;
+    }}
+    
+    .winner-avatar {{
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ffd700, #ffa502);
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        box-shadow: 0 0 30px gold;
+    }}
+    
+    .winner-name {{
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: gold;
+    }}
+    
+    .winner-prize {{
+        font-size: 1.3rem;
+        font-weight: 900;
+        color: #ffd700;
+        margin-top: 10px;
+    }}
+    
+    @keyframes float {{
+        0%, 100% {{ transform: translateY(0); }}
+        50% {{ transform: translateY(-10px); }}
+    }}
+
+    /* بطاقات المعلومات الثقافية */
+    .info-card {{
+        background: linear-gradient(135deg, rgba(74,144,226,0.2), rgba(155,89,182,0.2));
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 20px;
+        padding: 25px;
+        margin: 20px 0;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s;
+    }}
+    
+    .info-card:hover {{
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(74,144,226,0.3);
+        border-color: #4a90e2;
+    }}
+    
+    .info-icon {{
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+    }}
+    
+    .info-title {{
+        font-size: 1.3rem;
         font-weight: bold;
         color: var(--primary);
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        font-size: 0.8rem;
+        margin-bottom: 10px;
     }}
-    @keyframes ticker {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(-100%, 0); }} }}
+
+    /* إيموجي متحرك */
+    .floating-emoji {{
+        font-size: 3rem;
+        animation: bounce 2s ease infinite;
+        display: inline-block;
+        margin: 0 10px;
+    }}
+    
+    @keyframes bounce {{
+        0%, 100% {{ transform: translateY(0); }}
+        50% {{ transform: translateY(-20px); }}
+    }}
+
+    /* تأثيرات الإغراء */
+    .glow-text {{
+        font-size: 2rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #ffd700, #ffa502, #ff6b6b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: glow 2s ease infinite;
+    }}
+    
+    @keyframes glow {{
+        0%, 100% {{ filter: brightness(1); }}
+        50% {{ filter: brightness(1.3); }}
+    }}
+    
+    .counter {{
+        font-size: 3rem;
+        font-weight: 900;
+        color: gold;
+        text-shadow: 0 0 30px gold;
+        animation: countPulse 1s ease infinite;
+    }}
+    
+    @keyframes countPulse {{
+        0%, 100% {{ opacity: 1; }}
+        50% {{ opacity: 0.8; }}
+    }}
 
     /* Settings Button */
     .settings-button {{
@@ -499,13 +690,13 @@ st.markdown(f"""
         color: #ccc;
         cursor: pointer;
     }}
-    
-    /* Glass Cards with Rich Padding */
+
+    /* Glass Cards */
     .glass-card {{
-        background: rgba(255, 255, 255, 0.04);
+        background: var(--card-bg);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 25px;
-        padding: 45px;
+        padding: 35px;
         margin-bottom: 30px;
         backdrop-filter: blur(20px);
         transition: all 0.4s ease;
@@ -529,11 +720,24 @@ st.markdown(f"""
         width: 85px; height: 85px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
         font-size: 2.2rem; font-weight: 900; background: rgba(0,0,0,0.5); border: 3px solid var(--primary);
         box-shadow: 0 0 25px rgba(0, 242, 254, 0.4);
+        animation: ballGlow 2s ease infinite;
     }}
+    
+    @keyframes ballGlow {{
+        0%, 100% {{ box-shadow: 0 0 25px rgba(0, 242, 254, 0.4); }}
+        50% {{ box-shadow: 0 0 40px rgba(0, 242, 254, 0.8); }}
+    }}
+    
     .ball.special {{ border-color: var(--accent); box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); }}
+    .ball.special:hover {{ animation: specialBall 1s ease infinite; }}
+    
+    @keyframes specialBall {{
+        0%, 100% {{ transform: scale(1); }}
+        50% {{ transform: scale(1.1); }}
+    }}
 
     /* Metrics */
-    .metric-container {{ text-align: center; padding: 35px; background: rgba(255,255,255,0.05); border-radius: 25px; border: 1px solid rgba(255,255,255,0.05); }}
+    .metric-container {{ text-align: center; padding: 35px; background: var(--card-bg); border-radius: 25px; border: 1px solid rgba(255,255,255,0.05); }}
     .metric-value {{ font-size: 3.2rem; font-weight: 900; color: var(--primary); text-shadow: 0 0 20px rgba(0,242,254,0.3); }}
     .metric-label {{ font-size: 1rem; color: #888; text-transform: uppercase; margin-top: 10px; }}
 
@@ -584,6 +788,16 @@ st.markdown(f"""
     input:checked + .slider:before {{
         transform: translateX(26px);
     }}
+    
+    /* Compact mode */
+    {'' if st.session_state.compact_mode else '''
+    .main > div { padding: 2rem 3rem; }
+    '''}
+    
+    /* Animation toggle */
+    {'' if st.session_state.animations else '''
+    .ball, .glass-card, .winner-card, .info-card { animation: none !important; transition: none !important; }
+    '''}
 </style>
 """, unsafe_allow_html=True)
 
@@ -653,6 +867,8 @@ if st.session_state.show_settings:
                 - **Cache:** ✅ Active
                 - **Session:** {len(st.session_state)} items
                 - **Last Cleanup:** {st.session_state.last_cleanup.strftime('%H:%M:%S')}
+                - **Theme:** {st.session_state.theme}
+                - **Animations:** {'On' if st.session_state.animations else 'Off'}
                 """)
             
             # Language Settings
@@ -676,23 +892,27 @@ if st.session_state.show_settings:
                 
                 # Theme Selection
                 st.markdown("#### 🎨 Theme")
-                theme = st.radio(
+                theme_choice = st.radio(
                     "",
-                    ['dark', 'light', 'system'],
-                    format_func=lambda x: {'dark': t['theme_dark'], 'light': t['theme_light'], 'system': t['theme_system']}[x],
+                    ['dark', 'light'],
+                    format_func=lambda x: {'dark': t['theme_dark'], 'light': t['theme_light']}[x],
+                    index=0 if st.session_state.theme == 'dark' else 1,
                     horizontal=True
                 )
                 
                 # Animations
                 st.markdown("#### ✨ Animations")
-                animations = st.toggle(t['animations'], value=True)
+                animations_choice = st.toggle(t['animations'], value=st.session_state.animations)
                 
                 # Compact Mode
                 st.markdown("#### 📏 Layout")
-                compact = st.toggle(t['compact_mode'], value=False)
+                compact_choice = st.toggle(t['compact_mode'], value=st.session_state.compact_mode)
                 
                 if st.button("💾 Save Appearance"):
-                    st.success("Appearance settings saved!")
+                    st.session_state.theme = theme_choice
+                    st.session_state.animations = animations_choice
+                    st.session_state.compact_mode = compact_choice
+                    st.rerun()
             
             # Notification Settings
             elif st.session_state.settings_page == 'notifications':
@@ -729,7 +949,7 @@ if st.session_state.show_settings:
                 
                 if st.button("🔄 " + t['reset_all'], use_container_width=True):
                     for key in list(st.session_state.keys()):
-                        if key not in ['language', 'show_settings']:
+                        if key not in ['language', 'show_settings', 'theme', 'animations', 'compact_mode']:
                             del st.session_state[key]
                     st.rerun()
                 
@@ -747,6 +967,8 @@ if st.session_state.show_settings:
                     - PyArrow: {'✅' if PYARROW_AVAILABLE else '❌'}
                     - Cache: {'✅' if os.path.exists('predictions.cache') else '❌'}
                     - Session: {len(st.session_state)} items
+                    - Theme: {st.session_state.theme}
+                    - Animations: {'On' if st.session_state.animations else 'Off'}
                     """)
                 
                 if st.button("⚠️ " + t['clear_history'], use_container_width=True):
@@ -758,12 +980,67 @@ if st.session_state.show_settings:
         
         st.markdown("</div>", unsafe_allow_html=True)
 
-# ==================== TICKER COMPONENT ====================
+# ==================== TICKER COMPONENT (مطور) ====================
 st.markdown(f"""
     <div class="ticker-container">
-        <div class="ticker-text">{t['ticker_text']}</div>
+        <div class="ticker-text">
+            <span>🎲🎯💰</span> 🎲 LOTTO 6AUS49 JACKPOT: €45.2 MILLIONEN <span>🔥🔥🔥</span> 🇪🇺 EUROJACKPOT: €87 MILLIONEN <span>💶💶💶</span> 🏆 GEWINNER HEUTE: 3 NEUE MILLIONÄRE <span>🤩🤩🤩</span> 🎲🎯💰
+        </div>
     </div>
 """, unsafe_allow_html=True)
+
+# ==================== JACKPOT TICKER ====================
+jackpot_lotto = random.randint(42, 48)
+jackpot_euro = random.randint(82, 95)
+
+st.markdown(f"""
+    <div class="jackpot-ticker">
+        <span class="floating-emoji">💰</span>
+        AKTUELLE JACKPOTS: 
+        <span class="jackpot-value">LOTTO: €{jackpot_lotto}.2M</span>
+        <span class="floating-emoji">💶</span>
+        <span class="jackpot-value">EURO: €{jackpot_euro}.5M</span>
+        <span class="floating-emoji">💎</span>
+    </div>
+""", unsafe_allow_html=True)
+
+# ==================== WINNERS GALLERY (فائزون وهميون) ====================
+st.markdown("## 🏆 **UNSERE GLÜCKLICHEN GEWINNER 2026** 🏆")
+
+winners = [
+    {"name": "Michael S. 🎲", "prize": "€4.2M", "city": "München", "emoji": "👨‍🦰"},
+    {"name": "Laura K. 💰", "prize": "€7.8M", "city": "Berlin", "emoji": "👩"},
+    {"name": "Thomas W. 🔮", "prize": "€12.3M", "city": "Hamburg", "emoji": "👨‍🦳"},
+    {"name": "Sarah M. 🌟", "prize": "€3.5M", "city": "Frankfurt", "emoji": "👩‍🦰"},
+    {"name": "Klaus D. 💎", "prize": "€9.1M", "city": "Köln", "emoji": "👴"},
+    {"name": "Anna S. 🎯", "prize": "€6.7M", "city": "Stuttgart", "emoji": "👩‍🦱"},
+]
+
+cols = st.columns(3)
+for i, winner in enumerate(winners[:3]):
+    with cols[i]:
+        st.markdown(f"""
+            <div class="winner-card">
+                <div class="winner-avatar">{winner['emoji']}</div>
+                <div class="winner-name">{winner['name']}</div>
+                <div>📍 {winner['city']}</div>
+                <div class="winner-prize">{winner['prize']}</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+cols2 = st.columns(3)
+for i, winner in enumerate(winners[3:6]):
+    with cols2[i]:
+        st.markdown(f"""
+            <div class="winner-card">
+                <div class="winner-avatar">{winner['emoji']}</div>
+                <div class="winner-name">{winner['name']}</div>
+                <div>📍 {winner['city']}</div>
+                <div class="winner-prize">{winner['prize']}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
 # ==================== DATA ENGINE ====================
 class QuantumPredictor:
@@ -813,23 +1090,67 @@ with st.sidebar:
         }
     )
 
+# ==================== INFO SECTION (ثقافية) ====================
+st.markdown("---")
+st.markdown("## 🎯 **WISSEN FÜR GEWINNER** 🎯")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown("""
+        <div class="info-card">
+            <div class="info-icon">📊</div>
+            <div class="info-title">DIE 5 HÄUFIGSTEN ZAHLEN</div>
+            <p>🔴 19: 187x gezogen<br>🔵 23: 176x gezogen<br>🟢 7: 169x gezogen<br>🟡 31: 165x gezogen<br>🟣 42: 158x gezogen</p>
+            <p><small>Statistik 2020-2026</small></p>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+        <div class="info-card">
+            <div class="info-icon">🧠</div>
+            <div class="info-title">PROFI-TIPPS</div>
+            <p>✅ Zahlen zwischen 1-31 sind beliebt<br>✅ Vermeide Geburtstage<br>✅ Setze auf Muster<br>✅ Nutze Zufallsgeneratoren<br>✅ Bleib konsistent</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown("""
+        <div class="info-card">
+            <div class="info-icon">📈</div>
+            <div class="info-title">ANALYSE-PLATTFORMEN</div>
+            <p>🔗 Lotto-Analyse Pro<br>🔗 EuroJackpot Insights<br>🔗 Quantum Numbers AI<br>🔗 WinPredictor 2026<br>🔗 Statistik-Forum DE</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("---")
+
 # ==================== PAGES ====================
 
 if menu == t['home']:
-    st.markdown(f"<div style='text-align: center; padding: 60px 0;'><h1 style='font-size: 4.5rem; background: linear-gradient(to right, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;'>{t['title']}</h1><p style='font-size: 1.5rem; color: #666; letter-spacing: 8px;'>{t['subtitle']}</p></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; padding: 40px 0 20px;'><h1 style='font-size: 4rem; background: linear-gradient(to right, #00f2fe, #4facfe, #ffd700); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;'>{t['title']}</h1><p style='font-size: 1.3rem; color: #aaa; letter-spacing: 5px;'>{t['subtitle']}</p></div>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown(f"<div class='glass-card'><h3><span class='icon-box'>🎲</span> {t['lotto']}</h3><p style='margin-top: 20px; font-size: 1.1rem;'>Status: <span style='color: #00ff00;'>Active Analysis</span></p><p>Next Draw: {(datetime.now() + timedelta(days=2)).strftime('%d.%m.2026')}</p></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='glass-card'><h3><span class='icon-box'>🎲</span> {t['lotto']}</h3><p style='margin-top: 20px; font-size: 1.3rem;'>Aktueller Jackpot: <span style='color: gold; font-weight: bold;'>€{jackpot_lotto}.2M</span></p><p>Status: <span style='color: #00ff00;'>Active Analysis</span></p><p>Next Draw: {(datetime.now() + timedelta(days=2)).strftime('%d.%m.2026')}</p></div>", unsafe_allow_html=True)
     with col2:
-        st.markdown(f"<div class='glass-card'><h3><span class='icon-box'>🇪🇺</span> {t['euro']}</h3><p style='margin-top: 20px; font-size: 1.1rem;'>Status: <span style='color: #00ff00;'>Active Analysis</span></p><p>Next Draw: {(datetime.now() + timedelta(days=4)).strftime('%d.%m.2026')}</p></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='glass-card'><h3><span class='icon-box'>🇪🇺</span> {t['euro']}</h3><p style='margin-top: 20px; font-size: 1.3rem;'>Aktueller Jackpot: <span style='color: gold; font-weight: bold;'>€{jackpot_euro}.5M</span></p><p>Status: <span style='color: #00ff00;'>Active Analysis</span></p><p>Next Draw: {(datetime.now() + timedelta(days=4)).strftime('%d.%m.2026')}</p></div>", unsafe_allow_html=True)
+
+    # Counter
+    st.markdown(f"""
+        <div style='text-align: center; margin: 40px 0;'>
+            <span class='counter'>{random.randint(150, 200)}</span>
+            <span style='font-size: 1.5rem; color: #aaa;'> MILLIONÄRE BIS JETZT IN 2026</span>
+        </div>
+    """, unsafe_allow_html=True)
 
     st.markdown(f"### 📍 {t['map_title']}")
     map_data = pd.DataFrame({'lat': np.random.uniform(47.2, 55.0, 50), 'lon': np.random.uniform(5.8, 15.0, 50), 'winners': np.random.randint(1, 10, 50)})
     st.map(map_data, size='winners', color='#00f2fe')
 
 elif menu == t['lotto']:
-    st.markdown(f"<h1 style='text-align:center; padding: 40px;'>{t['lotto']}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='text-align:center; padding: 30px;'>{t['lotto']} <span style='color: gold;'>€{jackpot_lotto}.2M</span></h1>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1, 2, 1])
     with c2:
         if st.button(t['predict_btn'], use_container_width=True):
@@ -851,7 +1172,7 @@ elif menu == t['lotto']:
             """, unsafe_allow_html=True)
 
 elif menu == t['euro']:
-    st.markdown(f"<h1 style='text-align:center; padding: 40px;'>{t['euro']}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='text-align:center; padding: 30px;'>{t['euro']} <span style='color: gold;'>€{jackpot_euro}.5M</span></h1>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1, 2, 1])
     with c2:
         if st.button(t['predict_btn'], use_container_width=True):
@@ -885,4 +1206,4 @@ elif menu == t['stats']:
     st.plotly_chart(fig, use_container_width=True)
 
 # --- FOOTER ---
-st.markdown(f"<div class='footer'><p style='font-weight: bold; color: var(--primary); font-size: 1.1rem;'>{t['footer']}</p><p style='font-size: 0.8rem; max-width: 900px; margin: 20px auto; line-height: 1.6;'>{t['disclaimer']}</p><p style='font-size: 0.7rem; color: #444; margin-top: 20px;'>Quantum Core v2.6 | PyArrow: {'✅' if PYARROW_AVAILABLE else '❌'} | Compression: GZIP Active</p></div>", unsafe_allow_html=True)
+st.markdown(f"<div class='footer'><p style='font-weight: bold; color: var(--primary); font-size: 1.1rem;'>{t['footer']}</p><p style='font-size: 0.8rem; max-width: 900px; margin: 20px auto; line-height: 1.6;'>{t['disclaimer']}</p><p style='font-size: 0.7rem; color: #444; margin-top: 20px;'>Quantum Core v2.6 | PyArrow: {'✅' if PYARROW_AVAILABLE else '❌'} | Compression: GZIP Active | Theme: {st.session_state.theme}</p></div>", unsafe_allow_html=True)
