@@ -1,21 +1,9 @@
-# ══════════════════════════════════════════════
-#  AI Predictor Germany 2026 — Requirements
-#  Production Ready — March 2026
-# ══════════════════════════════════════════════
-
-# ── Core Framework ──────────────────────────
 streamlit>=1.43.0,<1.44.0
-
-# ── Data Processing ─────────────────────────
 pandas>=2.2.0,<2.3.0
-numpy>=2.2.0,<2.3.0
-pyarrow>=19.0.0,<20.0.0  # 10x performance boost
-
-# ── Visualization ───────────────────────────
-plotly>=6.0.0,<7.0.0
-
-# ── Utilities ───────────────────────────────
+numpy>=1.26.0,<2.0.0
+plotly>=5.24.0,<6.0.0
 requests>=2.32.0,<3.0.0
-Pillow>=11.0.0,<12.0.0
+Pillow>=10.4.0,<11.0.0
+supabase>=2.3.0,<3.0.0
 python-dateutil>=2.9.0
 pytz>=2024.1
