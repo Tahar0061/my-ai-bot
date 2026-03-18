@@ -1229,5 +1229,6 @@ def page_daily():
                     with bcols[i%4]:
                         bicon=str(b.get("icon",""))
                         bname=str(b.get("name",""))
-                        parts = []
+                        # السطر 2458 - المكتمل
+    
                 
