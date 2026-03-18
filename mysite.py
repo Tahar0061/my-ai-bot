@@ -1229,6 +1229,5 @@ def page_daily():
                     with bcols[i%4]:
                         bicon=str(b.get("icon",""))
                         bname=str(b.get("name",""))
-                        # السطر 2458 - المكتمل
-    
+                        html = "<div class='badge'>
                 
