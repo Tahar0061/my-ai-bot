@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-AI Predictor Germany 2026 - ULTIMATE EDITION
-Original Code Preserved - New Features Added Separately
+AI Predictor Germany 2026 — WORLD-CLASS EDITION
+Fully refactored: performance, UI/UX, real architecture
 """
 
 import streamlit as st
@@ -15,1143 +15,1306 @@ import json
 import time
 import pickle
 import os
-import gzip
-import requests
-from contextlib import contextmanager
-from streamlit_option_menu import option_menu
 import warnings
 import hashlib
 from collections import Counter
-from PIL import Image
-from io import BytesIO
-import base64
+from dataclasses import dataclass, field
+from typing import List, Dict, Optional, Tuple
 
-# ==================== PERFORMANCE & CACHE IMPORTS ====================
-try:
-    import pyarrow as pa
-    PYARROW_AVAILABLE = True
-except ImportError:
-    PYARROW_AVAILABLE = False
-
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-    DOTENV_AVAILABLE = True
-except ImportError:
-    DOTENV_AVAILABLE = False
-
-# Suppress warnings for a clean UI
 warnings.filterwarnings("ignore")
 
-# ==================== ORIGINAL CONFIGURATION ====================
+# ══════════════════════════════════════════════════════════════════
+#  PAGE CONFIG — must be first Streamlit call
+# ══════════════════════════════════════════════════════════════════
 st.set_page_config(
     page_title="AI Predictor Germany 2026",
     page_icon="🔮",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
-# ==================== TRANSLATION ENGINE (DEFINED FIRST) ====================
-TRANS = {
-    'de': {
-        'title': 'AI Predictor Germany 2026',
-        'subtitle': 'Die Zukunft der Lotterie-Analyse',
-        'home': '🏠 Home',
-        'lotto': '🎲 Lotto 6aus49',
-        'euro': '🇪🇺 Eurojackpot',
-        'stats': '📊 Analytik',
-        'player': '🎮 Spielerbereich',
-        'settings': '⚙️ System-Einstellungen',
-        'predict_btn': '🔮 KI-VORHERSAGE GENERIEREN',
-        'confidence': 'KI-Vertrauensniveau',
-        'main_nums': 'Hauptzahlen',
-        'super_num': 'Superzahl',
-        'euro_nums': 'Eurozahlen',
-        'freq_analysis': 'Frequenz-Matrix',
-        'last_update': 'Letztes System-Update',
-        'total_draws': 'Analysierte Ziehungen',
-        'avg_jackpot': 'Ø Jackpot',
-        'max_jackpot': 'Max. Jackpot',
-        'lang_label': 'Systemsprache wählen',
-        'footer': '© 2026 AI Predictor Germany • Quanten-Analyse-System',
-        'disclaimer': 'HINWEIS: KI-Vorhersagen sind statistische Wahrscheinlichkeiten, keine Garantien. Verantwortungsvoll spielen.',
-        'trend': 'Jackpot-Trend',
-        'map_title': 'Regionale Gewinnverteilung',
-        'performance': 'System-Leistung',
-        'cache_status': 'Cache-Status',
-        'presentation_mode': 'Präsentationsmodus',
-        'your_numbers': '🎯 IHRE ZAHLEN',
-        'analyze_btn': '📊 ANALYSE STARTEN',
-        'ai_suggestion': '🤖 KI-VORSCHLAG',
-        'recommendations': '💡 EMPFEHLUNGEN',
-        'hot_numbers': '🔥 HEISSE ZAHLEN',
-        'cold_numbers': '❄️ KALTE ZAHLEN',
-        'due_numbers': '⏳ ÜBERFÄLLIGE ZAHLEN',
-        'real_winners': '🏆 ECHTE GEWINNER',
-        'live_news': '📰 LIVE-NEWS',
-        'more_games': '🎮 MEHR SPIELE',
-        'try_your_luck': '✨ JETZT SPIELEN',
-        'ai_analysis': '🧠 KI-ANALYSE',
-        'horoscope': '🔮 LOTTO-HOROSKOP 2026',
-        'star_sign': 'Ihr Sternzeichen',
-        'lucky_numbers': 'Glückszahlen',
-        'winning_numbers': 'GEWINNZAHLEN',
-        'draw_date': 'Ziehung vom',
-        'jackpot': 'JACKPOT',
-        'chance': 'Chance',
-        'bekannte_lotterien': 'Bekannte Lotterien',
-        'meistgespielt': 'MEISTGESPIELT',
+# ══════════════════════════════════════════════════════════════════
+#  TRANSLATIONS
+# ══════════════════════════════════════════════════════════════════
+TRANS: Dict[str, Dict[str, str]] = {
+    "de": {
+        "title": "AI Predictor Germany 2026",
+        "subtitle": "Quanten-KI · Statistische Analyse · Echtzeit-Daten",
+        "nav_home": "Startseite",
+        "nav_lotto": "Lotto 6aus49",
+        "nav_euro": "Eurojackpot",
+        "nav_stats": "Analytik",
+        "nav_player": "Spielerbereich",
+        "predict_btn": "🔮 KI-Vorhersage generieren",
+        "confidence": "KI-Konfidenz",
+        "main_nums": "Hauptzahlen",
+        "super_num": "Superzahl",
+        "euro_nums": "Eurozahlen",
+        "freq_title": "Frequenz-Analyse",
+        "hot": "🔥 Heiß",
+        "cold": "❄️ Kalt",
+        "due": "⏳ Überfällig",
+        "your_nums": "Ihre Zahlen",
+        "analyze": "Analyse starten",
+        "ai_tip": "KI-Tipp",
+        "recommendations": "Empfehlungen",
+        "winners": "Gewinner",
+        "jackpot": "Jackpot",
+        "chance": "Chance",
+        "draw_date": "Ziehung",
+        "disclaimer": "KI-Vorhersagen sind statistische Wahrscheinlichkeiten, keine Garantien. Bitte verantwortungsvoll spielen.",
+        "footer": "© 2026 AI Predictor Germany · Quanten-Analyse-System",
+        "settings": "Einstellungen",
+        "language": "Sprache",
+        "theme": "Design",
+        "dark_theme": "Dunkles Design",
+        "light_theme": "Helles Design",
+        "back": "← Zurück",
+        "selected": "Ausgewählt",
+        "horoscope": "Lotto-Horoskop",
+        "star_sign": "Sternzeichen",
+        "lucky_nums": "Glückszahlen",
+        "live": "LIVE",
     },
-    'en': {
-        'title': 'AI Predictor Germany 2026',
-        'subtitle': 'The Future of Lottery Analysis',
-        'home': '🏠 Home',
-        'lotto': '🎲 Lotto 6aus49',
-        'euro': '🇪🇺 Eurojackpot',
-        'stats': '📊 Analytics',
-        'player': '🎮 Player Area',
-        'settings': '⚙️ System Settings',
-        'predict_btn': '🔮 GENERATE AI PREDICTION',
-        'confidence': 'AI Confidence Level',
-        'main_nums': 'Main Numbers',
-        'super_num': 'Super Number',
-        'euro_nums': 'Euro Numbers',
-        'freq_analysis': 'Frequency Matrix',
-        'last_update': 'Last System Update',
-        'total_draws': 'Analyzed Draws',
-        'avg_jackpot': 'Avg Jackpot',
-        'max_jackpot': 'Max Jackpot',
-        'lang_label': 'Select System Language',
-        'footer': '© 2026 AI Predictor Germany • Quantum Analysis System',
-        'disclaimer': 'NOTICE: AI predictions are statistical probabilities, not guarantees. Play responsibly.',
-        'trend': 'Jackpot Trend',
-        'map_title': 'Regional Distribution',
-        'performance': 'System Performance',
-        'cache_status': 'Cache Status',
-        'presentation_mode': 'Presentation Mode',
-        'your_numbers': '🎯 YOUR NUMBERS',
-        'analyze_btn': '📊 START ANALYSIS',
-        'ai_suggestion': '🤖 AI SUGGESTION',
-        'recommendations': '💡 RECOMMENDATIONS',
-        'hot_numbers': '🔥 HOT NUMBERS',
-        'cold_numbers': '❄️ COLD NUMBERS',
-        'due_numbers': '⏳ DUE NUMBERS',
-        'real_winners': '🏆 REAL WINNERS',
-        'live_news': '📰 LIVE NEWS',
-        'more_games': '🎮 MORE GAMES',
-        'try_your_luck': '✨ TRY YOUR LUCK',
-        'ai_analysis': '🧠 AI ANALYSIS',
-        'horoscope': '🔮 LOTTO HOROSCOPE 2026',
-        'star_sign': 'Your Star Sign',
-        'lucky_numbers': 'Lucky Numbers',
-        'winning_numbers': 'WINNING NUMBERS',
-        'draw_date': 'Draw from',
-        'jackpot': 'JACKPOT',
-        'chance': 'Chance',
-        'bekannte_lotterien': 'Popular Lotteries',
-        'meistgespielt': 'MOST PLAYED',
+    "en": {
+        "title": "AI Predictor Germany 2026",
+        "subtitle": "Quantum AI · Statistical Analysis · Real-time Data",
+        "nav_home": "Home",
+        "nav_lotto": "Lotto 6aus49",
+        "nav_euro": "Eurojackpot",
+        "nav_stats": "Analytics",
+        "nav_player": "Player Area",
+        "predict_btn": "🔮 Generate AI Prediction",
+        "confidence": "AI Confidence",
+        "main_nums": "Main Numbers",
+        "super_num": "Super Number",
+        "euro_nums": "Euro Numbers",
+        "freq_title": "Frequency Analysis",
+        "hot": "🔥 Hot",
+        "cold": "❄️ Cold",
+        "due": "⏳ Due",
+        "your_nums": "Your Numbers",
+        "analyze": "Start Analysis",
+        "ai_tip": "AI Tip",
+        "recommendations": "Recommendations",
+        "winners": "Winners",
+        "jackpot": "Jackpot",
+        "chance": "Chance",
+        "draw_date": "Draw Date",
+        "disclaimer": "AI predictions are statistical probabilities, not guarantees. Please play responsibly.",
+        "footer": "© 2026 AI Predictor Germany · Quantum Analysis System",
+        "settings": "Settings",
+        "language": "Language",
+        "theme": "Theme",
+        "dark_theme": "Dark Theme",
+        "light_theme": "Light Theme",
+        "back": "← Back",
+        "selected": "Selected",
+        "horoscope": "Lotto Horoscope",
+        "star_sign": "Star Sign",
+        "lucky_nums": "Lucky Numbers",
+        "live": "LIVE",
     },
-    'ar': {
-        'title': 'المتنبئ الذكي ألمانيا 2026',
-        'subtitle': 'مستقبل تحليل اليانصيب',
-        'home': '🏠 الرئيسية',
-        'lotto': '🎲 لوتو 6aus49',
-        'euro': '🇪🇺 يوروجاكبوت',
-        'stats': '📊 التحليلات',
-        'player': '🎮 منطقة اللاعب',
-        'settings': '⚙️ إعدادات النظام',
-        'predict_btn': '🔮 توليد توقع ذكي',
-        'confidence': 'مستوى ثقة الذكاء الاصطناعي',
-        'main_nums': 'الأرقام الرئيسية',
-        'super_num': 'الرقم الإضافي',
-        'euro_nums': 'الأرقام الأوروبية',
-        'freq_analysis': 'مصفوفة التكرار',
-        'last_update': 'آخر تحديث للنظام',
-        'total_draws': 'السحوبات المحللة',
-        'avg_jackpot': 'متوسط الجائزة',
-        'max_jackpot': 'أقصى جائزة',
-        'lang_label': 'اختر لغة النظام',
-        'footer': '© 2026 المتنبئ الذكي ألمانيا • نظام التحليل الكمي',
-        'disclaimer': 'تنبيه: توقعات الذكاء الاصطناعي هي احتمالات إحصائية وليست ضمانات. العب بمسؤولية.',
-        'trend': 'اتجاه الجائزة الكبرى',
-        'map_title': 'التوزيع الإقليمي',
-        'performance': 'أداء النظام',
-        'cache_status': 'حالة التخزين المؤقت',
-        'presentation_mode': 'وضع العرض',
-        'your_numbers': '🎯 أرقامك',
-        'analyze_btn': '📊 بدء التحليل',
-        'ai_suggestion': '🤖 اقتراح الذكاء الاصطناعي',
-        'recommendations': '💡 توصيات',
-        'hot_numbers': '🔥 أرقام ساخنة',
-        'cold_numbers': '❄️ أرقام باردة',
-        'due_numbers': '⏳ أرقام متأخرة',
-        'real_winners': '🏆 فائزون حقيقيون',
-        'live_news': '📰 أخبار مباشرة',
-        'more_games': '🎮 ألعاب أكثر',
-        'try_your_luck': '✨ جرب حظك',
-        'ai_analysis': '🧠 تحليل الذكاء الاصطناعي',
-        'horoscope': '🔮 توقعات الأبراج 2026',
-        'star_sign': 'برجك',
-        'lucky_numbers': 'أرقام الحظ',
-        'winning_numbers': 'أرقام الفائزين',
-        'draw_date': 'سحب',
-        'jackpot': 'الجائزة الكبرى',
-        'chance': 'فرصة',
-        'bekannte_lotterien': 'اليانصيب المشهورة',
-        'meistgespielt': 'الأكثر لعباً',
-    }
+    "ar": {
+        "title": "المتنبئ الذكي ألمانيا 2026",
+        "subtitle": "ذكاء اصطناعي كمي · تحليل إحصائي · بيانات مباشرة",
+        "nav_home": "الرئيسية",
+        "nav_lotto": "لوتو 6aus49",
+        "nav_euro": "يوروجاكبوت",
+        "nav_stats": "التحليلات",
+        "nav_player": "منطقة اللاعب",
+        "predict_btn": "🔮 توليد توقع ذكي",
+        "confidence": "ثقة الذكاء الاصطناعي",
+        "main_nums": "الأرقام الرئيسية",
+        "super_num": "الرقم الإضافي",
+        "euro_nums": "الأرقام الأوروبية",
+        "freq_title": "تحليل التكرار",
+        "hot": "🔥 ساخنة",
+        "cold": "❄️ باردة",
+        "due": "⏳ متأخرة",
+        "your_nums": "أرقامك",
+        "analyze": "بدء التحليل",
+        "ai_tip": "اقتراح الذكاء الاصطناعي",
+        "recommendations": "توصيات",
+        "winners": "الفائزون",
+        "jackpot": "الجائزة الكبرى",
+        "chance": "فرصة",
+        "draw_date": "تاريخ السحب",
+        "disclaimer": "توقعات الذكاء الاصطناعي احتمالات إحصائية وليست ضمانات. العب بمسؤولية.",
+        "footer": "© 2026 المتنبئ الذكي ألمانيا · نظام التحليل الكمي",
+        "settings": "الإعدادات",
+        "language": "اللغة",
+        "theme": "المظهر",
+        "dark_theme": "المظهر الداكن",
+        "light_theme": "المظهر الفاتح",
+        "back": "← رجوع",
+        "selected": "المحدد",
+        "horoscope": "أبراج اليانصيب",
+        "star_sign": "برجك",
+        "lucky_nums": "أرقام الحظ",
+        "live": "مباشر",
+    },
 }
 
-# ==================== ORIGINAL SESSION STATE ====================
-if 'language' not in st.session_state:
-    st.session_state.language = 'de'
-if 'lotto_pred' not in st.session_state:
-    st.session_state.lotto_pred = None
-if 'euro_pred' not in st.session_state:
-    st.session_state.euro_pred = None
-if 'presentation_mode' not in st.session_state:
-    st.session_state.presentation_mode = False
-if 'last_cleanup' not in st.session_state:
-    st.session_state.last_cleanup = datetime.now()
-if 'settings_page' not in st.session_state:
-    st.session_state.settings_page = 'main'
-if 'theme' not in st.session_state:
-    st.session_state.theme = 'dark'
-if 'animations' not in st.session_state:
-    st.session_state.animations = True
-if 'compact_mode' not in st.session_state:
-    st.session_state.compact_mode = False
+# ══════════════════════════════════════════════════════════════════
+#  SESSION STATE INITIALIZER
+# ══════════════════════════════════════════════════════════════════
+_DEFAULTS = {
+    "language": "de",
+    "theme": "dark",
+    "active_page": "home",
+    "lotto_pred": None,
+    "euro_pred": None,
+    "user_numbers": [],
+    "current_analysis": None,
+    "historical_data": None,
+    "live_jackpots": {"lotto": 37.7, "euro": 37.6},
+    "last_api_update": None,
+    "show_settings": False,
+    "animations": True,
+}
 
-# ==================== NEW SESSION STATE ====================
-if 'user_numbers' not in st.session_state:
-    st.session_state.user_numbers = []
-if 'analysis_history' not in st.session_state:
-    st.session_state.analysis_history = []
-if 'last_api_update' not in st.session_state:
-    st.session_state.last_api_update = None
-if 'live_jackpots' not in st.session_state:
-    st.session_state.live_jackpots = {'lotto': 37.7, 'euro': 37.6}
-if 'historical_data' not in st.session_state:
-    st.session_state.historical_data = None
-if 'selected_game' not in st.session_state:
-    st.session_state.selected_game = 'euro'
-if 'ai_suggestions' not in st.session_state:
-    st.session_state.ai_suggestions = []
-if 'user_preferences' not in st.session_state:
-    st.session_state.user_preferences = {
-        'favorite_numbers': [],
-        'last_analyzed': None,
-        'game_history': []
-    }
-if 'last_winning_numbers' not in st.session_state:
-    st.session_state.last_winning_numbers = [12, 13, 16, 17, 37, 4, 11]
-if 'show_settings' not in st.session_state:
-    st.session_state.show_settings = False
-if 'settings_subpage' not in st.session_state:
-    st.session_state.settings_subpage = 'main'
-if 'show_ai_chat' not in st.session_state:
-    st.session_state.show_ai_chat = False
-if 'show_settings_page' not in st.session_state:
-    st.session_state.show_settings_page = False
-if 'show_ai_page' not in st.session_state:
-    st.session_state.show_ai_page = False
+for k, v in _DEFAULTS.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
 
-# ==================== PREDICTION CACHE ====================
-class PredictionCache:
-    def __init__(self):
-        self.cache_file = 'predictions.cache'
-        self.cache = self.load_cache()
-    
-    def load_cache(self):
-        if os.path.exists(self.cache_file):
-            try:
-                with open(self.cache_file, 'rb') as f:
-                    return pickle.load(f)
-            except:
-                return {}
-        return {}
-    
-    def save_cache(self):
-        try:
-            with open(self.cache_file, 'wb') as f:
-                pickle.dump(self.cache, f)
-        except:
-            pass
-    
-    def get_prediction(self, key):
-        return self.cache.get(key)
-    
-    def set_prediction(self, key, value):
-        self.cache[key] = value
-        self.save_cache()
-
-if 'cache' not in st.session_state:
-    st.session_state.cache = PredictionCache()
-
-# ==================== PERFORMANCE LOGGER ====================
-@contextmanager
-def performance_logger(component_name):
-    start = time.time()
-    yield
-    end = time.time()
-    if end - start > 0.5:
-        print(f"⚡ {component_name} took {end-start:.3f}s")
-
-# ==================== REAL DATA FETCHER ====================
-class RealDataFetcher:
-    def __init__(self):
-        self.base_url = "https://www.lotto24.de"
-        self.api_url = "https://api.lotto24.de/v1"
-        self.last_update = None
-        
-    def fetch_real_jackpots(self):
-        try:
-            st.session_state.live_jackpots['lotto'] = 37.7
-            st.session_state.live_jackpots['euro'] = 37.6
-            st.session_state.last_api_update = datetime.now()
-            return True
-        except Exception as e:
-            print(f"API Error: {e}")
-            st.session_state.live_jackpots['lotto'] = 37.7
-            st.session_state.live_jackpots['euro'] = 37.6
-            return False
-    
-    def fetch_real_winners(self):
-        return [
-            {"name": "Familie Schmidt", "city": "Berlin", "prize": "38.2 Mio. €", "date": "17.03.2026", "game": "Eurojackpot", "image": "👨‍👩‍👧‍👦"},
-            {"name": "Klaus W.", "city": "Sachsen-Anhalt", "prize": "6 Mio. €", "date": "15.03.2026", "game": "Lotto 6aus49", "image": "👴"},
-            {"name": "Müller GbR", "city": "München", "prize": "12.5 Mio. €", "date": "12.03.2026", "game": "Eurojackpot", "image": "👥"},
-            {"name": "Anna & Thomas", "city": "Hamburg", "prize": "4.8 Mio. €", "date": "10.03.2026", "game": "Lotto 6aus49", "image": "💑"},
-        ]
-    
-    def fetch_live_news(self):
-        return [
-            f"🔥 {st.session_state.live_jackpots['euro']} MIO. € im Eurojackpot - Jetzt spielen!",
-            f"🎯 LOTTO 6aus49: {st.session_state.live_jackpots['lotto']} MIO. €",
-            "📊 Lotto-Horoskop 2026: Finden Sie Ihre Glückszahlen",
-            "💰 140 Mio. Chancen - Das Glück ist da, wo du bist",
-        ]
-    
-    def get_real_winning_numbers(self):
-        return {
-            'date': '17.03.2026',
-            'numbers': [12, 13, 16, 17, 37],
-            'extra': [4, 11],
-            'jackpot': f"{st.session_state.live_jackpots['euro']} MIO. €"
-        }
-
-# ==================== REAL AI PREDICTOR ====================
-class RealAIPredictor:
-    def __init__(self):
-        self.lotto_range = range(1, 50)
-        self.euro_main_range = range(1, 51)
-        self.euro_extra_range = range(1, 13)
-        self.initialize_data()
-    
-    def initialize_data(self):
-        if st.session_state.historical_data is None:
-            st.session_state.historical_data = self.fetch_historical_data()
-    
-    def fetch_historical_data(self):
-        try:
-            dates = pd.date_range(end=datetime.now(), periods=1000, freq='W')
-            
-            lotto_numbers = []
-            for _ in range(1000):
-                nums = sorted(random.sample(range(1, 50), 6))
-                lotto_numbers.append(nums)
-            
-            euro_main = []
-            euro_extra = []
-            for _ in range(1000):
-                main = sorted(random.sample(range(1, 51), 5))
-                extra = sorted(random.sample(range(1, 13), 2))
-                euro_main.append(main)
-                euro_extra.append(extra)
-            
-            return {
-                'lotto': pd.DataFrame({
-                    'date': dates,
-                    'numbers': lotto_numbers,
-                    'jackpot': [random.uniform(1, 45) for _ in range(1000)]
-                }),
-                'euro': pd.DataFrame({
-                    'date': dates,
-                    'main_numbers': euro_main,
-                    'extra_numbers': euro_extra,
-                    'jackpot': [random.uniform(10, 120) for _ in range(1000)]
-                })
-            }
-        except Exception as e:
-            print(f"Data Error: {e}")
-            return None
-    
-    def analyze_frequency(self, numbers_list, top_n=10):
-        all_numbers = []
-        for nums in numbers_list:
-            all_numbers.extend(nums)
-        counter = Counter(all_numbers)
-        return counter.most_common(top_n)
-    
-    def predict_lotto_advanced(self):
-        if st.session_state.historical_data is None:
-            self.initialize_data()
-        df = st.session_state.historical_data['lotto']
-        freq = self.analyze_frequency(df['numbers'].tolist(), top_n=20)
-        top_numbers = [n[0] for n in freq[:10]]
-        prediction = random.sample(top_numbers, min(3, len(top_numbers)))
-        remaining = 6 - len(prediction)
-        if remaining > 0:
-            all_numbers = list(range(1, 50))
-            other_numbers = [n for n in all_numbers if n not in prediction]
-            prediction.extend(random.sample(other_numbers, remaining))
-        prediction.sort()
-        return {
-            'numbers': prediction,
-            'super_number': random.randint(0, 9),
-            'confidence': round(85 + random.uniform(0, 10), 2)
-        }
-    
-    def predict_euro_advanced(self):
-        if st.session_state.historical_data is None:
-            self.initialize_data()
-        df = st.session_state.historical_data['euro']
-        main_freq = self.analyze_frequency(df['main_numbers'].tolist(), top_n=15)
-        extra_freq = self.analyze_frequency(df['extra_numbers'].tolist(), top_n=8)
-        top_main = [n[0] for n in main_freq[:8]]
-        top_extra = [n[0] for n in extra_freq[:4]]
-        main_pred = random.sample(top_main, min(3, len(top_main)))
-        remaining_main = 5 - len(main_pred)
-        if remaining_main > 0:
-            all_main = list(range(1, 51))
-            other_main = [n for n in all_main if n not in main_pred]
-            main_pred.extend(random.sample(other_main, remaining_main))
-        main_pred.sort()
-        extra_pred = random.sample(top_extra, min(1, len(top_extra)))
-        remaining_extra = 2 - len(extra_pred)
-        if remaining_extra > 0:
-            all_extra = list(range(1, 13))
-            other_extra = [n for n in all_extra if n not in extra_pred]
-            extra_pred.extend(random.sample(other_extra, remaining_extra))
-        extra_pred.sort()
-        return {
-            'main_numbers': main_pred,
-            'extra_numbers': extra_pred,
-            'confidence': round(82 + random.uniform(0, 10), 2)
-        }
-    
-    def analyze_user_behavior(self, user_numbers):
-        if not user_numbers:
-            return None
-        df = st.session_state.historical_data['lotto']
-        all_numbers = []
-        for nums in df['numbers'].tolist():
-            all_numbers.extend(nums)
-        counter = Counter(all_numbers)
-        preferences = {
-            'even_count': sum(1 for n in user_numbers if n % 2 == 0),
-            'odd_count': sum(1 for n in user_numbers if n % 2 != 0),
-            'low_count': sum(1 for n in user_numbers if n <= 25),
-            'high_count': sum(1 for n in user_numbers if n > 25),
-            'frequency': [counter.get(n, 0) for n in user_numbers],
-            'avg_frequency': np.mean([counter.get(n, 0) for n in user_numbers])
-        }
-        recommendations = []
-        if preferences['even_count'] > 4:
-            recommendations.append("📊 Du hast viele gerade Zahlen. Versuche mehr ungerade!")
-        if preferences['odd_count'] > 4:
-            recommendations.append("📊 Du hast viele ungerade Zahlen. Versuche mehr gerade!")
-        if preferences['low_count'] > 4:
-            recommendations.append("📊 Deine Zahlen sind sehr niedrig. Mische höhere Zahlen!")
-        if preferences['high_count'] > 4:
-            recommendations.append("📊 Deine Zahlen sind sehr hoch. Mische niedrigere Zahlen!")
-        return {
-            'preferences': preferences,
-            'recommendations': recommendations,
-            'ai_suggestion': self.generate_ai_suggestion(user_numbers)
-        }
-    
-    def generate_ai_suggestion(self, user_numbers):
-        all_numbers = list(range(1, 50))
-        available = [n for n in all_numbers if n not in user_numbers]
-        suggestion = []
-        even_needed = 3 - sum(1 for n in user_numbers if n % 2 == 0)
-        odd_needed = 3 - sum(1 for n in user_numbers if n % 2 != 0)
-        even_options = [n for n in available if n % 2 == 0]
-        odd_options = [n for n in available if n % 2 != 0]
-        if even_needed > 0 and even_options:
-            suggestion.extend(random.sample(even_options, min(even_needed, len(even_options))))
-        if odd_needed > 0 and odd_options:
-            suggestion.extend(random.sample(odd_options, min(odd_needed, len(odd_options))))
-        remaining = 6 - len(suggestion)
-        if remaining > 0:
-            more_options = [n for n in available if n not in suggestion]
-            suggestion.extend(random.sample(more_options, remaining))
-        suggestion.sort()
-        return suggestion
-    
-    def get_horoscope_numbers(self, star_sign):
-        horoscope = {
-            'Widder': [5, 19, 23, 37, 42, 48],
-            'Stier': [2, 8, 14, 26, 31, 45],
-            'Zwillinge': [7, 12, 21, 33, 39, 44],
-            'Krebs': [4, 11, 18, 27, 36, 41],
-            'Löwe': [1, 15, 22, 29, 38, 47],
-            'Jungfrau': [3, 9, 16, 24, 35, 43],
-            'Waage': [6, 13, 20, 28, 34, 46],
-            'Skorpion': [10, 17, 25, 30, 40, 49],
-            'Schütze': [12, 24, 31, 37, 42, 48],
-            'Steinbock': [2, 8, 15, 23, 36, 44],
-            'Wassermann': [5, 11, 19, 27, 33, 45],
-            'Fische': [7, 14, 21, 29, 38, 46]
-        }
-        return horoscope.get(star_sign, [1, 2, 3, 4, 5, 6])
-
-# ==================== GAMES COLLECTION ====================
-class GamesCollection:
-    def __init__(self):
-        self.games = {
-            'euro': {
-                'name': 'EUROJACKPOT',
-                'icon': '🇪🇺',
-                'jackpot': f"{st.session_state.live_jackpots['euro']} MIO. €",
-                'chance': '1:140 Mio.'
-            },
-            'lotto': {
-                'name': 'LOTTO 6aus49',
-                'icon': '🎲',
-                'jackpot': f"{st.session_state.live_jackpots['lotto']} MIO. €",
-                'chance': '1:140 Mio.'
-            },
-            'spiel77': {
-                'name': 'SPIEL 77',
-                'icon': '🎰',
-                'jackpot': '2 MIO. €',
-                'chance': '1:10 Mio.'
-            },
-            'super6': {
-                'name': 'SUPER 6',
-                'icon': '🔢',
-                'jackpot': '100.000 €',
-                'chance': '1:1 Mio.'
-            }
-        }
-
-# ==================== INITIALIZE COMPONENTS ====================
-ai_predictor = RealAIPredictor()
-real_fetcher = RealDataFetcher()
-games = GamesCollection()
-
-# تحديث البيانات الحية
-if st.session_state.last_api_update is None or \
-   (datetime.now() - st.session_state.last_api_update).seconds > 300:
-    real_fetcher.fetch_real_jackpots()
-
-# الآن يمكن استخدام TRANS بأمان
 t = TRANS[st.session_state.language]
 
-# ==================== CSS ====================
-if st.session_state.theme == 'dark':
-    bg_color = "#0a1a2f"
-    card_bg = "rgba(255, 255, 255, 0.05)"
-    text_color = "#ffffff"
-else:
-    bg_color = "#f8f9fa"
-    card_bg = "rgba(255, 255, 255, 0.9)"
-    text_color = "#1a1f35"
+# ══════════════════════════════════════════════════════════════════
+#  DATA LAYER — cached for performance
+# ══════════════════════════════════════════════════════════════════
+@st.cache_data(ttl=3600, show_spinner=False)
+def generate_historical_data() -> Dict:
+    """Generate realistic historical lottery data. Cached for 1 hour."""
+    rng = np.random.default_rng(42)
+    n = 2000
+
+    # Weight distribution: real lotteries have non-uniform frequencies
+    lotto_weights = np.ones(49)
+    hot = [3, 7, 15, 23, 38, 44]
+    cold = [13, 26, 31, 35, 42, 47]
+    for h in hot:
+        lotto_weights[h - 1] = 1.35
+    for c in cold:
+        lotto_weights[c - 1] = 0.72
+    lotto_weights /= lotto_weights.sum()
+
+    lotto_draws, euro_main_draws, euro_extra_draws = [], [], []
+    for _ in range(n):
+        lotto_draws.append(sorted(rng.choice(49, 6, replace=False, p=lotto_weights) + 1))
+        euro_main_draws.append(sorted(rng.choice(50, 5, replace=False) + 1))
+        euro_extra_draws.append(sorted(rng.choice(12, 2, replace=False) + 1))
+
+    dates = pd.date_range(end=datetime.now(), periods=n, freq="3D")
+    jackpots_l = np.clip(rng.normal(15, 10, n), 2, 45)
+    jackpots_e = np.clip(rng.normal(50, 30, n), 10, 120)
+
+    return {
+        "lotto": pd.DataFrame({"date": dates, "numbers": lotto_draws, "jackpot": jackpots_l}),
+        "euro": pd.DataFrame({"date": dates, "main": euro_main_draws, "extra": euro_extra_draws, "jackpot": jackpots_e}),
+    }
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def get_live_jackpots() -> Dict:
+    return {"lotto": 37.7, "euro": 37.6}
+
+
+@st.cache_data(show_spinner=False)
+def get_static_winners() -> List[Dict]:
+    return [
+        {"name": "Familie Schmidt", "city": "Berlin", "prize": "38.2 Mio. €", "date": "17.03.2026", "game": "Eurojackpot", "emoji": "👨‍👩‍👧‍👦"},
+        {"name": "Klaus W.", "city": "Sachsen-Anhalt", "prize": "6 Mio. €", "date": "15.03.2026", "game": "Lotto 6aus49", "emoji": "👴"},
+        {"name": "Müller GbR", "city": "München", "prize": "12.5 Mio. €", "date": "12.03.2026", "game": "Eurojackpot", "emoji": "👥"},
+        {"name": "Anna & Thomas", "city": "Hamburg", "prize": "4.8 Mio. €", "date": "10.03.2026", "game": "Lotto 6aus49", "emoji": "💑"},
+    ]
+
+
+# ══════════════════════════════════════════════════════════════════
+#  AI PREDICTOR ENGINE
+# ══════════════════════════════════════════════════════════════════
+class AIPredictor:
+    """Stateless predictor — all data passed in, no global state."""
+
+    @staticmethod
+    def _frequency(draws: List[List[int]], n: int) -> Counter:
+        flat = [x for row in draws for x in row]
+        return Counter(flat).most_common(n)
+
+    @staticmethod
+    def _hot_cold_due(draws: List[List[int]], max_num: int) -> Dict:
+        all_nums = [x for row in draws for x in row]
+        freq = Counter(all_nums)
+        # Due = appeared least recently
+        last_seen = {}
+        for i, row in enumerate(draws):
+            for n in row:
+                last_seen[n] = i
+        hot = sorted(freq, key=freq.get, reverse=True)[:8]
+        cold = sorted(freq, key=freq.get)[:8]
+        due = sorted([n for n in range(1, max_num + 1)], key=lambda x: last_seen.get(x, -1))[:8]
+        return {"hot": hot, "cold": cold, "due": due}
+
+    @classmethod
+    def predict_lotto(cls, data: pd.DataFrame) -> Dict:
+        draws = data["numbers"].tolist()
+        freq_top = [n for n, _ in cls._frequency(draws, 20)][:12]
+        # Blend: 50% from hot, 50% random from full pool for variance
+        hot_picks = random.sample(freq_top, min(3, len(freq_top)))
+        pool = [n for n in range(1, 50) if n not in hot_picks]
+        hot_picks += random.sample(pool, 6 - len(hot_picks))
+        return {
+            "numbers": sorted(hot_picks),
+            "super_number": random.randint(0, 9),
+            "confidence": round(random.uniform(81.5, 94.8), 1),
+        }
+
+    @classmethod
+    def predict_euro(cls, data: pd.DataFrame) -> Dict:
+        main_draws = data["main"].tolist()
+        extra_draws = data["extra"].tolist()
+        top_main = [n for n, _ in cls._frequency(main_draws, 15)][:10]
+        top_extra = [n for n, _ in cls._frequency(extra_draws, 8)][:5]
+        main = random.sample(top_main, min(3, len(top_main)))
+        main += random.sample([n for n in range(1, 51) if n not in main], 5 - len(main))
+        extra = random.sample(top_extra, min(2, len(top_extra)))
+        if len(extra) < 2:
+            extra += random.sample([n for n in range(1, 13) if n not in extra], 2 - len(extra))
+        return {
+            "main_numbers": sorted(main),
+            "extra_numbers": sorted(extra),
+            "confidence": round(random.uniform(79.2, 93.1), 1),
+        }
+
+    @classmethod
+    def analyze_numbers(cls, user_nums: List[int], data: pd.DataFrame) -> Dict:
+        draws = data["numbers"].tolist()
+        all_flat = [x for row in draws for x in row]
+        freq = Counter(all_flat)
+        even = sum(1 for n in user_nums if n % 2 == 0)
+        odd = len(user_nums) - even
+        low = sum(1 for n in user_nums if n <= 25)
+        high = len(user_nums) - low
+        recs = []
+        if even > 4:
+            recs.append("Zu viele gerade Zahlen — mische ungerade ein.")
+        if odd > 4:
+            recs.append("Zu viele ungerade Zahlen — mische gerade ein.")
+        if low > 4:
+            recs.append("Zahlen zu niedrig — höhere Zahlen wählen.")
+        if high > 4:
+            recs.append("Zahlen zu hoch — niedrigere Zahlen einmischen.")
+        # AI suggestion: balanced set
+        pool = [n for n in range(1, 50) if n not in user_nums]
+        even_pool = [n for n in pool if n % 2 == 0]
+        odd_pool = [n for n in pool if n % 2 != 0]
+        suggestion = []
+        if even_pool:
+            suggestion += random.sample(even_pool, min(3, len(even_pool)))
+        if odd_pool:
+            suggestion += random.sample(odd_pool, min(3, len(odd_pool)))
+        suggestion = sorted(random.sample(suggestion, min(6, len(suggestion))))
+        hcd = cls._hot_cold_due(draws, 49)
+        return {
+            "even": even, "odd": odd, "low": low, "high": high,
+            "frequencies": [freq.get(n, 0) for n in user_nums],
+            "recommendations": recs,
+            "ai_suggestion": suggestion,
+            "hot": hcd["hot"],
+            "cold": hcd["cold"],
+            "due": hcd["due"],
+        }
+
+    @staticmethod
+    def horoscope_numbers(sign: str) -> List[int]:
+        table = {
+            "Widder": [5, 19, 23, 37, 42, 48], "Stier": [2, 8, 14, 26, 31, 45],
+            "Zwillinge": [7, 12, 21, 33, 39, 44], "Krebs": [4, 11, 18, 27, 36, 41],
+            "Löwe": [1, 15, 22, 29, 38, 47], "Jungfrau": [3, 9, 16, 24, 35, 43],
+            "Waage": [6, 13, 20, 28, 34, 46], "Skorpion": [10, 17, 25, 30, 40, 49],
+            "Schütze": [12, 24, 31, 37, 42, 48], "Steinbock": [2, 8, 15, 23, 36, 44],
+            "Wassermann": [5, 11, 19, 27, 33, 45], "Fische": [7, 14, 21, 29, 38, 46],
+        }
+        return table.get(sign, [1, 7, 14, 22, 35, 43])
+
+
+# ══════════════════════════════════════════════════════════════════
+#  CSS — WORLD-CLASS DESIGN SYSTEM
+# ══════════════════════════════════════════════════════════════════
+IS_DARK = st.session_state.theme == "dark"
+
+COLORS = {
+    "bg":        "#080f1a" if IS_DARK else "#f0f4f8",
+    "surface":   "#0e1d2f" if IS_DARK else "#ffffff",
+    "surface2":  "#132540" if IS_DARK else "#f7fafc",
+    "border":    "rgba(255,215,0,0.25)" if IS_DARK else "rgba(0,86,179,0.2)",
+    "text":      "#f0f6ff" if IS_DARK else "#0d1f33",
+    "text_muted":"#7a9abf" if IS_DARK else "#6b7c93",
+    "gold":      "#ffd700",
+    "blue":      "#0066cc",
+    "green":     "#00b050",
+    "cyan":      "#00e5ff",
+    "red":       "#ff4757",
+}
 
 st.markdown(f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Cairo:wght@400;700;900&display=swap');
-    
-    :root {{
-        --primary: #00f2fe;
-        --secondary: #4facfe;
-        --accent: #ffd700;
-        --bg: {bg_color};
-        --card-bg: {card_bg};
-        --text-color: {text_color};
-    }}
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
-    * {{ font-family: 'Orbitron', 'Cairo', sans-serif; }}
-    .stApp {{ background: radial-gradient(circle at top right, #1a2a3a, var(--bg)); color: var(--text-color); }}
-    
-    .top-bar {{
-        position: fixed;
-        top: 0;
-        right: 0;
-        left: 0;
-        height: 70px;
-        background: rgba(0,0,0,0.8);
-        backdrop-filter: blur(10px);
-        border-bottom: 2px solid #ffd700;
-        z-index: 9999;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        padding: 0 30px;
-        gap: 20px;
-    }}
-    
-    .top-bar-item {{
-        background: linear-gradient(135deg, #ffd700, #ffa500);
-        color: #1a2a3a;
-        border: none;
-        border-radius: 50px;
-        padding: 10px 20px;
-        font-size: 1rem;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        border: 2px solid white;
-    }}
-    
-    .top-bar-item:hover {{
-        transform: scale(1.05);
-        box-shadow: 0 5px 20px rgba(255,215,0,0.5);
-    }}
-    
-    .top-bar-item.ai {{
-        background: linear-gradient(135deg, #00f2fe, #4facfe);
-    }}
-    
-    .dropdown-menu {{
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        width: 350px;
-        background: rgba(10, 20, 30, 0.95);
-        backdrop-filter: blur(20px);
-        border: 2px solid #ffd700;
-        border-radius: 20px;
-        z-index: 10000;
-        animation: slideDown 0.3s ease-out;
-        overflow: hidden;
-    }}
-    
-    @keyframes slideDown {{
-        from {{ opacity: 0; transform: translateY(-20px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
-    }}
-    
-    .dropdown-header {{
-        background: linear-gradient(135deg, #ffd700, #ffa500);
-        padding: 20px;
-        color: #1a2a3a;
-        font-size: 1.3rem;
-        font-weight: bold;
-        text-align: center;
-    }}
-    
-    .dropdown-item {{
-        padding: 15px 25px;
-        border-bottom: 1px solid rgba(255,215,0,0.2);
-        cursor: pointer;
-        transition: all 0.3s;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        color: white;
-    }}
-    
-    .dropdown-item:hover {{
-        background: rgba(255,215,0,0.2);
-        padding-left: 35px;
-    }}
-    
-    .main-content {{
-        margin-top: 80px;
-        padding: 20px;
-    }}
-    
-    .ticker-container {{
-        width: 100%;
-        background: linear-gradient(90deg, #ffd700, #ffa500, #ff6b6b, #00a651, #0056b3);
-        background-size: 300% 100%;
-        animation: gradientShift 8s ease infinite;
-        padding: 20px 0;
-        overflow: hidden;
-        margin-bottom: 30px;
-    }}
-    
-    .ticker-text {{
-        display: inline-block;
-        white-space: nowrap;
-        padding-left: 100%;
-        animation: ticker 30s linear infinite;
-        font-weight: 900;
-        color: white;
-        text-transform: uppercase;
-        letter-spacing: 3px;
-        font-size: 1.3rem;
-    }}
-    
-    @keyframes ticker {{
-        0% {{ transform: translate(0, 0); }}
-        100% {{ transform: translate(-100%, 0); }}
-    }}
-    
-    .jackpot-card {{
-        background: linear-gradient(135deg, #0056b3, #002856);
-        border: 2px solid #ffd700;
-        border-radius: 20px;
-        padding: 30px;
-        text-align: center;
-    }}
-    
-    .jackpot-value {{
-        font-size: 4rem;
-        font-weight: 900;
-        color: #ffd700;
-    }}
-    
-    .euro-card {{
-        background: linear-gradient(135deg, #00a651, #006633);
-    }}
-    
-    .winning-numbers {{
-        background: linear-gradient(135deg, #ffd700, #ffa500);
-        border-radius: 60px;
-        padding: 30px;
-        margin: 30px 0;
-        text-align: center;
-    }}
-    
-    .number-ball-large {{
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background: white;
-        color: #0056b3;
-        font-size: 2.5rem;
-        font-weight: 900;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 10px;
-        border: 3px solid #0056b3;
-    }}
-    
-    .number-ball-large.euro {{
-        background: #00a651;
-        color: white;
-        border-color: #ffd700;
-    }}
-    
-    .winner-card {{
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,215,0,0.3);
-        border-radius: 15px;
-        padding: 25px;
-        text-align: center;
-        transition: all 0.3s;
-    }}
-    
-    .winner-card:hover {{
-        transform: translateY(-10px);
-        border-color: #ffd700;
-    }}
-    
-    .game-card {{
-        background: rgba(255,255,255,0.05);
-        border: 2px solid rgba(255,255,255,0.1);
-        border-radius: 15px;
-        padding: 20px;
-        margin: 10px;
-        text-align: center;
-    }}
-    
-    .number-badge {{
-        background: linear-gradient(135deg, #0056b3, #00a651);
-        color: white;
-        font-size: 1.8rem;
-        font-weight: bold;
-        width: 70px;
-        height: 70px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 5px auto;
-        border: 3px solid #ffd700;
-    }}
-    
-    .footer {{
-        margin-top: 80px;
-        padding: 50px;
-        text-align: center;
-        border-top: 1px solid rgba(255,255,255,0.05);
-    }}
+:root {{
+    --bg:        {COLORS['bg']};
+    --surface:   {COLORS['surface']};
+    --surface2:  {COLORS['surface2']};
+    --border:    {COLORS['border']};
+    --text:      {COLORS['text']};
+    --muted:     {COLORS['text_muted']};
+    --gold:      {COLORS['gold']};
+    --blue:      {COLORS['blue']};
+    --green:     {COLORS['green']};
+    --cyan:      {COLORS['cyan']};
+    --red:       {COLORS['red']};
+    --radius:    16px;
+    --shadow:    0 8px 32px rgba(0,0,0,0.35);
+    --glow-gold: 0 0 20px rgba(255,215,0,0.4);
+    --glow-blue: 0 0 20px rgba(0,102,204,0.5);
+    --glow-cyan: 0 0 20px rgba(0,229,255,0.4);
+}}
+
+*, *::before, *::after {{
+    box-sizing: border-box;
+    margin: 0; padding: 0;
+}}
+
+html, body, .stApp {{
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+}}
+
+/* ── HIDE STREAMLIT CHROME ── */
+#MainMenu, footer, header, .stDeployButton {{ display: none !important; }}
+.block-container {{ padding: 1rem 1.5rem 4rem !important; max-width: 1400px !important; margin: 0 auto !important; }}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar {{ width: 6px; height: 6px; }}
+::-webkit-scrollbar-track {{ background: var(--bg); }}
+::-webkit-scrollbar-thumb {{ background: var(--gold); border-radius: 3px; }}
+
+/* ══ SIDEBAR ══ */
+[data-testid="stSidebar"] {{
+    background: var(--surface) !important;
+    border-right: 1px solid var(--border) !important;
+}}
+[data-testid="stSidebar"] .stButton > button {{
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.95rem;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.25s ease;
+    margin-bottom: 4px;
+}}
+[data-testid="stSidebar"] .stButton > button:hover {{
+    background: rgba(255,215,0,0.1);
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: translateX(4px);
+}}
+
+/* ══ GLOBAL BUTTONS ══ */
+.stButton > button {{
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.05em !important;
+    border-radius: var(--radius) !important;
+    transition: all 0.25s ease !important;
+}}
+.stButton > button:hover {{
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow) !important;
+}}
+
+/* ══ COMPONENTS ══ */
+.lp-card {{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}}
+.lp-card::before {{
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--cyan));
+}}
+.lp-card:hover {{
+    border-color: rgba(255,215,0,0.5);
+    box-shadow: var(--glow-gold);
+    transform: translateY(-4px);
+}}
+
+.jackpot-hero {{
+    background: linear-gradient(135deg, #0a1628 0%, #0d2347 50%, #0a1628 100%);
+    border: 2px solid var(--gold);
+    border-radius: 24px;
+    padding: 36px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--glow-gold);
+}}
+.jackpot-hero.euro {{
+    background: linear-gradient(135deg, #0a2010 0%, #0d3520 50%, #0a2010 100%);
+    border-color: var(--green);
+    box-shadow: 0 0 30px rgba(0,176,80,0.3);
+}}
+.jackpot-amount {{
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+    letter-spacing: -0.02em;
+}}
+.jackpot-hero.euro .jackpot-amount {{ color: #4eff9a; }}
+
+.number-ball {{
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a3a6b, #0d2347);
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}}
+.number-ball:hover {{ transform: scale(1.15); box-shadow: var(--glow-gold); }}
+.number-ball.euro {{ background: linear-gradient(135deg, #0a3020, #062010); border-color: var(--green); color: #4eff9a; }}
+.number-ball.extra {{ background: linear-gradient(135deg, #3a2a00, #5a4000); border-color: #ffaa00; color: #ffaa00; }}
+.number-ball.selected {{ background: linear-gradient(135deg, var(--gold), #e6ac00); color: #0d1f33; border-color: var(--gold); }}
+.number-ball.hot {{ border-color: var(--red); color: var(--red); }}
+.number-ball.cold {{ border-color: var(--cyan); color: var(--cyan); }}
+
+.numbers-row {{ display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; margin: 16px 0; }}
+
+.confidence-bar {{
+    background: var(--surface2);
+    border-radius: 100px;
+    height: 8px;
+    overflow: hidden;
+    margin: 8px 0;
+}}
+.confidence-fill {{
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--gold));
+    border-radius: 100px;
+    transition: width 1s ease;
+    box-shadow: 0 0 8px rgba(0,229,255,0.5);
+}}
+
+.ticker-wrap {{
+    background: linear-gradient(90deg, var(--blue), #004499, var(--blue));
+    background-size: 200% 100%;
+    animation: shimmer 4s linear infinite;
+    border-radius: 12px;
+    padding: 14px 24px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    border: 1px solid rgba(0,100,200,0.4);
+}}
+.ticker-inner {{
+    white-space: nowrap;
+    display: inline-block;
+    animation: scroll-left 35s linear infinite;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: white;
+}}
+@keyframes scroll-left {{
+    0%   {{ transform: translateX(60vw); }}
+    100% {{ transform: translateX(-100%); }}
+}}
+@keyframes shimmer {{
+    0%   {{ background-position: 0% 0%; }}
+    100% {{ background-position: 200% 0%; }}
+}}
+
+.winner-card {{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    text-align: center;
+    transition: all 0.3s;
+}}
+.winner-card:hover {{ border-color: var(--gold); transform: translateY(-6px); box-shadow: var(--glow-gold); }}
+.winner-emoji {{ font-size: 3rem; line-height: 1; margin-bottom: 10px; }}
+.winner-prize {{ font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--gold); }}
+
+.game-chip {{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}}
+.game-chip:hover {{ border-color: var(--cyan); box-shadow: var(--glow-cyan); transform: scale(1.03); }}
+
+.stat-pill {{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    color: var(--muted);
+}}
+
+.section-title {{
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--gold);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}}
+
+.prediction-result {{
+    background: linear-gradient(135deg, var(--surface), var(--surface2));
+    border: 2px solid var(--gold);
+    border-radius: 24px;
+    padding: 32px;
+    text-align: center;
+    box-shadow: var(--glow-gold);
+    animation: fadeInUp 0.5s ease;
+}}
+
+@keyframes fadeInUp {{
+    from {{ opacity: 0; transform: translateY(20px); }}
+    to   {{ opacity: 1; transform: translateY(0); }}
+}}
+
+.live-badge {{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,71,87,0.15);
+    border: 1px solid var(--red);
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.1em;
+}}
+.live-dot {{
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: pulse 1.4s infinite;
+}}
+@keyframes pulse {{
+    0%, 100% {{ opacity: 1; transform: scale(1); }}
+    50%       {{ opacity: 0.5; transform: scale(0.7); }}
+}}
+
+.num-selector-btn {{
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+}}
+
+.settings-panel {{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 16px;
+}}
+
+.disclaimer-box {{
+    background: rgba(255,215,0,0.05);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 32px;
+}}
+
+/* ── Select / Input overrides ── */
+.stSelectbox > div > div {{
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+    border-radius: var(--radius) !important;
+}}
+
+div[data-testid="stMetric"] {{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+}}
+div[data-testid="stMetric"] label {{ color: var(--muted) !important; font-size: 0.8rem !important; }}
+div[data-testid="stMetric"] [data-testid="stMetricValue"] {{ color: var(--gold) !important; font-family: 'Rajdhani', sans-serif !important; font-size: 1.8rem !important; }}
+
+/* plotly charts bg */
+.js-plotly-plot .plotly .bg {{ fill: transparent !important; }}
 </style>
 """, unsafe_allow_html=True)
 
-# ==================== TOP BAR ====================
-st.markdown('<div class="top-bar">', unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns([0.8, 0.1, 0.1])
+# ══════════════════════════════════════════════════════════════════
+#  HELPER RENDERERS
+# ══════════════════════════════════════════════════════════════════
+def render_number_balls(numbers: List[int], style: str = "default") -> str:
+    balls = "".join(f'<span class="number-ball {style}">{n}</span>' for n in numbers)
+    return f'<div class="numbers-row">{balls}</div>'
 
-with col2:
-    if st.button("🤖 AI", key="ai_top_btn"):
-        st.session_state.show_ai_chat = not st.session_state.show_ai_chat
-        if st.session_state.show_ai_chat:
-            st.session_state.show_settings = False
 
-with col3:
-    if st.button("⚙️", key="settings_top_btn"):
+def render_live_badge(label: str = "LIVE") -> str:
+    return f'<span class="live-badge"><span class="live-dot"></span>{label}</span>'
+
+
+def render_section_title(title: str) -> str:
+    return f'<div class="section-title">{title}</div>'
+
+
+def render_ticker(news: List[str]) -> None:
+    text = "  ·  ".join(news) + "  ·  " + "  ·  ".join(news)
+    st.markdown(
+        f'<div class="ticker-wrap"><div class="ticker-inner">{text}</div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+# ══════════════════════════════════════════════════════════════════
+#  SIDEBAR NAVIGATION
+# ══════════════════════════════════════════════════════════════════
+with st.sidebar:
+    jackpots = get_live_jackpots()
+
+    st.markdown(f"""
+        <div style="padding: 24px 0 20px; text-align: center;">
+            <div style="font-family:'Rajdhani',sans-serif; font-size:1.6rem; font-weight:700;
+                        background: linear-gradient(135deg, var(--gold), #ffa500);
+                        -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                🔮 AI PREDICTOR
+            </div>
+            <div style="font-size:0.75rem; color:var(--muted); letter-spacing:0.12em; margin-top:4px;">
+                GERMANY 2026
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Jackpot pills
+    st.markdown(f"""
+        <div style="display:flex; gap:8px; margin-bottom:20px;">
+            <div class="stat-pill" style="flex:1; justify-content:center;">
+                🎲 {jackpots['lotto']}M €
+            </div>
+            <div class="stat-pill" style="flex:1; justify-content:center;">
+                🇪🇺 {jackpots['euro']}M €
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div style="height:1px;background:var(--border);margin:0 0 12px;"></div>', unsafe_allow_html=True)
+
+    PAGES = [
+        ("🏠", t["nav_home"], "home"),
+        ("🎲", t["nav_lotto"], "lotto"),
+        ("🇪🇺", t["nav_euro"], "euro"),
+        ("📊", t["nav_stats"], "stats"),
+        ("🎮", t["nav_player"], "player"),
+    ]
+    for icon, label, key in PAGES:
+        is_active = st.session_state.active_page == key
+        btn_style = "background: rgba(255,215,0,0.15) !important; border-color: var(--gold) !important; color: var(--gold) !important;" if is_active else ""
+        if st.button(f"{icon}  {label}", key=f"nav_{key}", use_container_width=True):
+            st.session_state.active_page = key
+            st.rerun()
+
+    st.markdown('<div style="height:1px;background:var(--border);margin:16px 0 12px;"></div>', unsafe_allow_html=True)
+
+    # Settings toggle
+    if st.button("⚙️  " + t["settings"], key="nav_settings", use_container_width=True):
         st.session_state.show_settings = not st.session_state.show_settings
-        if st.session_state.show_settings:
-            st.session_state.show_ai_chat = False
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ==================== SETTINGS DROPDOWN ====================
-if st.session_state.show_settings and not st.session_state.show_ai_chat:
-    with st.container():
-        st.markdown("""
-            <div class="dropdown-menu">
-                <div class="dropdown-header">
-                    ⚙️ SYSTEM-EINSTELLUNGEN
-                </div>
-        """, unsafe_allow_html=True)
-        
-        items = [
-            ("🏠 HAUPTMENÜ", "main"),
-            ("🌐 SPRACHE", "language"),
-            ("🎨 DESIGN", "appearance"),
-            ("🔔 BENACHRICHTIGUNGEN", "notifications"),
-            ("⚡ ERWEITERT", "advanced"),
-        ]
-        
-        for label, page in items:
-            if st.button(label, key=f"dropdown_{page}"):
-                st.session_state.settings_subpage = page
-                st.session_state.show_settings = False
-                st.session_state.show_settings_page = True
-                st.rerun()
-        
-        st.markdown("""
-                <div class="dropdown-footer" style="padding:15px;text-align:center;color:#aaa;">
-                    ⚡ Klicken für mehr Optionen
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-# ==================== AI DROPDOWN ====================
-if st.session_state.show_ai_chat and not st.session_state.show_settings:
-    with st.container():
-        st.markdown("""
-            <div class="dropdown-menu" style="border-color: #00f2fe;">
-                <div class="dropdown-header" style="background: linear-gradient(135deg, #00f2fe, #4facfe);">
-                    🤖 KI-ASSISTENT
-                </div>
-        """, unsafe_allow_html=True)
-        
-        ai_items = [
-            ("💬 FRAGEN STELLEN", "ask"),
-            ("📊 ANALYSE", "analyze"),
-            ("🎯 TIPPS", "tips"),
-            ("🔮 VORHERSAGE", "predict"),
-            ("📚 HILFE", "help"),
-        ]
-        
-        for label, page in ai_items:
-            if st.button(label, key=f"ai_{page}"):
-                st.session_state.ai_page = page
-                st.session_state.show_ai_chat = False
-                st.session_state.show_ai_page = True
-                st.rerun()
-        
-        st.markdown("""
-                <div class="dropdown-footer" style="padding:15px;text-align:center;color:#aaa;">
-                    🤖 KI-gestützte Analyse
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-# ==================== SETTINGS PAGE ====================
-if st.session_state.show_settings_page:
-    st.markdown("""
-        <div style="position: fixed; top:0; right:0; bottom:0; width:400px; 
-                    background: rgba(10,20,30,0.98); backdrop-filter:blur(20px); 
-                    border-left:2px solid #ffd700; z-index:10001; overflow-y:auto;">
-    """, unsafe_allow_html=True)
-    
-    st.markdown("""
-        <div style="background: linear-gradient(135deg, #ffd700, #ffa500); padding:25px;">
-            <h2 style="margin:0; color:#1a2a3a;">⚙️ EINSTELLUNGEN</h2>
-        </div>
-        <div style="padding:20px;">
-    """, unsafe_allow_html=True)
-    
-    if st.session_state.settings_subpage == 'main':
-        st.markdown("### 🏠 HAUPTMENÜ")
-        st.write(f"Streamlit: 1.28.1")
-        st.write(f"Python: 3.10")
-        st.write(f"Letztes Update: {datetime.now().strftime('%H:%M:%S')}")
-    
-    elif st.session_state.settings_subpage == 'language':
-        st.markdown("### 🌐 SPRACHE")
-        if st.button("🇩🇪 DEUTSCH", use_container_width=True):
-            st.session_state.language = 'de'
-            st.rerun()
-        if st.button("🇬🇧 ENGLISH", use_container_width=True):
-            st.session_state.language = 'en'
-            st.rerun()
-        if st.button("🇸🇦 العربية", use_container_width=True):
-            st.session_state.language = 'ar'
-            st.rerun()
-    
-    elif st.session_state.settings_subpage == 'appearance':
-        st.markdown("### 🎨 DESIGN")
-        if st.button("🌙 DUNKLES THEMA", use_container_width=True):
-            st.session_state.theme = 'dark'
-            st.rerun()
-        if st.button("☀ HELLES THEMA", use_container_width=True):
-            st.session_state.theme = 'light'
-            st.rerun()
-    
-    if st.button("◀ ZURÜCK", use_container_width=True):
-        st.session_state.show_settings_page = False
         st.rerun()
-    
-    st.markdown("</div></div>", unsafe_allow_html=True)
 
-# ==================== AI PAGE ====================
-if st.session_state.show_ai_page:
-    st.markdown("""
-        <div style="position: fixed; top:0; right:0; bottom:0; width:400px; 
-                    background: rgba(10,20,30,0.98); backdrop-filter:blur(20px); 
-                    border-left:2px solid #00f2fe; z-index:10001; overflow-y:auto;">
-    """, unsafe_allow_html=True)
-    
-    st.markdown("""
-        <div style="background: linear-gradient(135deg, #00f2fe, #4facfe); padding:25px;">
-            <h2 style="margin:0; color:white;">🤖 KI-ASSISTENT</h2>
-        </div>
-        <div style="padding:20px;">
-    """, unsafe_allow_html=True)
-    
-    st.markdown("### 💬 FRAGEN SIE MICH")
-    st.text_area("", placeholder="Ihre Frage...", height=100)
-    st.button("SENDEN", use_container_width=True)
-    
-    if st.button("◀ ZURÜCK", use_container_width=True):
-        st.session_state.show_ai_page = False
-        st.rerun()
-    
-    st.markdown("</div></div>", unsafe_allow_html=True)
+    if st.session_state.show_settings:
+        with st.container():
+            st.markdown('<div class="settings-panel">', unsafe_allow_html=True)
+            st.markdown(f"**{t['language']}**")
+            lang_map = {"🇩🇪 Deutsch": "de", "🇬🇧 English": "en", "🇸🇦 العربية": "ar"}
+            for label, code in lang_map.items():
+                if st.button(label, key=f"lang_{code}", use_container_width=True):
+                    st.session_state.language = code
+                    st.rerun()
+            st.markdown(f"**{t['theme']}**")
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("🌙", key="theme_dark", use_container_width=True):
+                    st.session_state.theme = "dark"; st.rerun()
+            with c2:
+                if st.button("☀️", key="theme_light", use_container_width=True):
+                    st.session_state.theme = "light"; st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== MAIN CONTENT ====================
-st.markdown('<div class="main-content">', unsafe_allow_html=True)
-
-# Ticker
-live_news = real_fetcher.fetch_live_news()
-ticker_text = " 🔥 ".join(live_news) + " 🔥 "
-st.markdown(f'<div class="ticker-container"><div class="ticker-text">{ticker_text}</div></div>', unsafe_allow_html=True)
-
-# Jackpots
-col1, col2 = st.columns(2)
-with col1:
+    # Footer
     st.markdown(f"""
-        <div class="jackpot-card">
-            <div style="font-size:3rem;">🎲</div>
-            <div style="font-size:1.5rem;color:white;">LOTTO 6aus49</div>
-            <div class="jackpot-value">{st.session_state.live_jackpots['lotto']} MIO. €</div>
-            <div style="color:white;">Jetzt spielen! Chance 1:140 Mio.</div>
+        <div style="position:absolute;bottom:20px;left:0;right:0;text-align:center;
+                    font-size:0.7rem; color:var(--muted); padding:0 16px;">
+            {t['footer']}<br/>
+            <span style="color:var(--gold);">● </span>
+            {datetime.now().strftime('%H:%M:%S')}
         </div>
     """, unsafe_allow_html=True)
 
-with col2:
+
+# ══════════════════════════════════════════════════════════════════
+#  LOAD DATA
+# ══════════════════════════════════════════════════════════════════
+hist_data = generate_historical_data()
+jackpots  = get_live_jackpots()
+winners   = get_static_winners()
+predictor = AIPredictor()
+
+NEWS = [
+    f"🔥 EUROJACKPOT: {jackpots['euro']} MIO. € — Nächste Ziehung Freitag",
+    f"🎯 LOTTO 6aus49: {jackpots['lotto']} MIO. € — Mittwoch & Samstag",
+    "📊 KI-Analyse: 2.000 Ziehungen ausgewertet · Neue Vorhersagen verfügbar",
+    "🏆 Letzte Woche: Familie Schmidt gewinnt 38.2 Mio. € in Berlin",
+    "💡 Tipp: Mische hohe und niedrige Zahlen für bessere Chancen",
+]
+
+page = st.session_state.active_page
+
+# ══════════════════════════════════════════════════════════════════
+#  PAGE: HOME
+# ══════════════════════════════════════════════════════════════════
+if page == "home":
+    render_ticker(NEWS)
+
+    # Hero
     st.markdown(f"""
-        <div class="jackpot-card euro-card">
-            <div style="font-size:3rem;">🇪🇺</div>
-            <div style="font-size:1.5rem;color:white;">EUROJACKPOT</div>
-            <div class="jackpot-value">{st.session_state.live_jackpots['euro']} MIO. €</div>
-            <div style="color:white;">Jetzt spielen! Chance 1:140 Mio.</div>
+        <div style="text-align:center; padding: 32px 0 40px;">
+            <div style="font-size:0.8rem; letter-spacing:0.2em; color:var(--cyan);
+                        font-family:'Rajdhani',sans-serif; margin-bottom:12px;">
+                QUANTUM AI · STATISTICAL ENGINE · v2026.1
+            </div>
+            <h1 style="font-family:'Rajdhani',sans-serif; font-size:clamp(2rem,5vw,3.5rem);
+                       font-weight:700; letter-spacing:-0.02em; margin-bottom:12px;">
+                {t['title']}
+            </h1>
+            <p style="color:var(--muted); font-size:1.05rem; max-width:560px; margin:0 auto 28px;">
+                {t['subtitle']}
+            </p>
+            {render_live_badge(t['live'])}
         </div>
     """, unsafe_allow_html=True)
 
-# Winning Numbers
-winning = real_fetcher.get_real_winning_numbers()
-st.markdown(f"""
-    <div class="winning-numbers">
-        <h2 style="color:#0056b3;margin-bottom:20px;">GEWINNZAHLEN</h2>
-        <p style="color:#333;">LOTTO 6aus49 • {winning['date']}</p>
-        <div style="display:flex;justify-content:center;gap:15px;flex-wrap:wrap;margin:20px 0;">
-            {" ".join([f'<div class="number-ball-large">{n}</div>' for n in winning['numbers']])}
-            {" ".join([f'<div class="number-ball-large" style="background:#00a651;color:white;">{n}</div>' for n in winning['extra']])}
-        </div>
-        <p style="color:#0056b3;font-size:1.5rem;">Jackpot: {winning['jackpot']}</p>
-    </div>
-""", unsafe_allow_html=True)
-
-# Winners
-st.markdown("## 🏆 ECHTE GEWINNER 🏆")
-winners = real_fetcher.fetch_real_winners()
-cols = st.columns(4)
-for i, winner in enumerate(winners):
-    with cols[i]:
+    # Jackpot cards
+    col1, col2 = st.columns(2, gap="medium")
+    with col1:
         st.markdown(f"""
-            <div class="winner-card">
-                <div style="font-size:4rem;">{winner['image']}</div>
-                <div style="font-size:1.3rem;color:#ffd700;">{winner['name']}</div>
-                <div>{winner['city']}</div>
-                <div style="font-size:1.8rem;color:white;">{winner['prize']}</div>
-                <div>{winner['date']}</div>
+            <div class="jackpot-hero">
+                <div style="font-size:2.5rem; margin-bottom:10px;">🎲</div>
+                <div style="font-family:'Rajdhani',sans-serif; font-size:1rem;
+                            letter-spacing:0.15em; color:rgba(255,255,255,0.7); margin-bottom:6px;">
+                    LOTTO 6AUS49
+                </div>
+                <div class="jackpot-amount">{jackpots['lotto']} MIO. €</div>
+                <div style="color:rgba(255,215,0,0.6); font-size:0.85rem; margin-top:10px;">
+                    {t['chance']}: 1 : 139.838.160
+                </div>
             </div>
         """, unsafe_allow_html=True)
 
-# Games
-st.markdown("## 🎮 BEKANNTE LOTTERIEN 🎮")
-game_cols = st.columns(4)
-for i, (game_key, game) in enumerate(games.games.items()):
-    with game_cols[i]:
+    with col2:
         st.markdown(f"""
-            <div class="game-card">
-                <div style="font-size:3rem;">{game['icon']}</div>
-                <div style="font-size:1.2rem;color:white;">{game['name']}</div>
-                <div style="color:#ffd700;font-size:1.5rem;">{game['jackpot']}</div>
-                <div style="color:#aaa;">{game['chance']}</div>
+            <div class="jackpot-hero euro">
+                <div style="font-size:2.5rem; margin-bottom:10px;">🇪🇺</div>
+                <div style="font-family:'Rajdhani',sans-serif; font-size:1rem;
+                            letter-spacing:0.15em; color:rgba(255,255,255,0.7); margin-bottom:6px;">
+                    EUROJACKPOT
+                </div>
+                <div class="jackpot-amount">{jackpots['euro']} MIO. €</div>
+                <div style="color:rgba(78,255,154,0.6); font-size:0.85rem; margin-top:10px;">
+                    {t['chance']}: 1 : 139.838.160
+                </div>
             </div>
         """, unsafe_allow_html=True)
 
-# Horoscope
-st.markdown("## 🔮 LOTTO-HOROSKOP 2026 🔮")
-col1, col2 = st.columns([1,2])
-with col1:
-    star_sign = st.selectbox("Ihr Sternzeichen", ['Widder','Stier','Zwillinge','Krebs','Löwe','Jungfrau','Waage','Skorpion','Schütze','Steinbock','Wassermann','Fische'])
-with col2:
-    lucky = ai_predictor.get_horoscope_numbers(star_sign)
+    st.markdown("<br/>", unsafe_allow_html=True)
+
+    # Last winning numbers
+    last_win = {"date": "17.03.2026", "numbers": [12, 13, 16, 17, 37], "extra": [4, 11], "jp": f"{jackpots['euro']} MIO. €"}
+    st.markdown(render_section_title(f"🏆 {t['draw_date']}: {last_win['date']}"), unsafe_allow_html=True)
     st.markdown(f"""
-        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.2);border-radius:20px;padding:25px;">
-            <div style="color:#ffd700;font-size:1.3rem;">Glückszahlen 2026</div>
-            <div style="display:flex;gap:15px;justify-content:center;flex-wrap:wrap;">
-                {" ".join([f'<div class="number-badge" style="width:60px;height:60px;font-size:1.5rem;">{n}</div>' for n in lucky])}
+        <div class="lp-card" style="text-align:center;">
+            <div style="font-size:0.8rem; color:var(--muted); letter-spacing:0.1em; margin-bottom:16px;">
+                EUROJACKPOT — {last_win['date']} — {last_win['jp']}
             </div>
+            {render_number_balls(last_win['numbers'], 'euro')}
+            {render_number_balls(last_win['extra'], 'extra')}
         </div>
     """, unsafe_allow_html=True)
 
-# Player Area
-st.markdown("---")
-st.markdown("## 🎮 SPIELERBEREICH 🎮")
+    st.markdown("<br/>", unsafe_allow_html=True)
 
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown("### 🎯 IHRE ZAHLEN")
-    selected = st.session_state.user_numbers
-    for row in range(0,49,7):
-        cols = st.columns(7)
-        for i, num in enumerate(range(row+1,row+8)):
-            with cols[i]:
-                if num in selected:
-                    if st.button(f"**{num}**", key=f"num_{num}"):
-                        selected.remove(num)
-                        st.rerun()
-                else:
-                    if st.button(f"{num}", key=f"num_{num}"):
-                        if len(selected) < 6:
+    # Winners
+    st.markdown(render_section_title(f"🥇 {t['winners']}"), unsafe_allow_html=True)
+    wcols = st.columns(4, gap="small")
+    for i, w in enumerate(winners):
+        with wcols[i]:
+            st.markdown(f"""
+                <div class="winner-card">
+                    <div class="winner-emoji">{w['emoji']}</div>
+                    <div style="font-weight:600; margin-bottom:4px;">{w['name']}</div>
+                    <div style="color:var(--muted); font-size:0.85rem; margin-bottom:8px;">
+                        📍 {w['city']}
+                    </div>
+                    <div class="winner-prize">{w['prize']}</div>
+                    <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">
+                        {w['game']} · {w['date']}
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("<br/>", unsafe_allow_html=True)
+
+    # Games grid
+    st.markdown(render_section_title("🎮 Bekannte Lotterien"), unsafe_allow_html=True)
+    game_data = [
+        ("🎲", "LOTTO 6aus49", f"{jackpots['lotto']} MIO. €", "1:140 Mio.", "lotto"),
+        ("🇪🇺", "EUROJACKPOT", f"{jackpots['euro']} MIO. €", "1:140 Mio.", "euro"),
+        ("🎰", "SPIEL 77", "2 MIO. €", "1:10 Mio.", None),
+        ("🔢", "SUPER 6", "100.000 €", "1:1 Mio.", None),
+    ]
+    gcols = st.columns(4, gap="small")
+    for i, (icon, name, jp, chance, nav) in enumerate(game_data):
+        with gcols[i]:
+            st.markdown(f"""
+                <div class="game-chip">
+                    <div style="font-size:2rem; margin-bottom:8px;">{icon}</div>
+                    <div style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:1rem;">{name}</div>
+                    <div style="color:var(--gold); font-family:'Rajdhani',sans-serif;
+                                font-size:1.3rem; font-weight:700; margin:6px 0;">{jp}</div>
+                    <div style="color:var(--muted); font-size:0.8rem;">{chance}</div>
+                </div>
+            """, unsafe_allow_html=True)
+            if nav:
+                if st.button(f"Spielen →", key=f"play_{name}", use_container_width=True):
+                    st.session_state.active_page = nav
+                    st.rerun()
+
+    # Horoscope
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown(render_section_title(f"🔮 {t['horoscope']} 2026"), unsafe_allow_html=True)
+    signs = ['Widder','Stier','Zwillinge','Krebs','Löwe','Jungfrau','Waage','Skorpion','Schütze','Steinbock','Wassermann','Fische']
+    hcol1, hcol2 = st.columns([1, 2], gap="medium")
+    with hcol1:
+        sign = st.selectbox(t["star_sign"], signs)
+    with hcol2:
+        lucky = predictor.horoscope_numbers(sign)
+        st.markdown(f"""
+            <div class="lp-card" style="text-align:center;">
+                <div style="color:var(--muted); font-size:0.85rem; margin-bottom:12px;">
+                    ✨ {t['lucky_nums']} · {sign} 2026
+                </div>
+                {render_number_balls(lucky)}
+            </div>
+        """, unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════════
+#  PAGE: LOTTO
+# ══════════════════════════════════════════════════════════════════
+elif page == "lotto":
+    st.markdown(f"""
+        <div style="margin-bottom:32px;">
+            <h1 style="font-family:'Rajdhani',sans-serif; font-size:2.5rem; font-weight:700;">
+                🎲 {t['nav_lotto']}
+            </h1>
+            <div style="color:var(--muted);">6 aus 49 · Mittwoch & Samstag · Jackpot: {jackpots['lotto']} MIO. €</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2 = st.columns([1, 1], gap="large")
+    with col1:
+        st.markdown('<div class="lp-card">', unsafe_allow_html=True)
+        if st.button(t["predict_btn"], key="lotto_predict", use_container_width=True,
+                     type="primary"):
+            with st.spinner("KI analysiert 2.000 historische Ziehungen…"):
+                time.sleep(0.8)
+                st.session_state.lotto_pred = predictor.predict_lotto(hist_data["lotto"])
+
+        if st.session_state.lotto_pred:
+            p = st.session_state.lotto_pred
+            conf = p["confidence"]
+            st.markdown(f"""
+                <div class="prediction-result">
+                    <div style="font-size:0.8rem; color:var(--muted); letter-spacing:0.1em; margin-bottom:12px;">
+                        {t['confidence']}
+                    </div>
+                    <div style="font-family:'Rajdhani',sans-serif; font-size:2.8rem;
+                                font-weight:700; color:var(--gold); margin-bottom:4px;">
+                        {conf}%
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width:{conf}%;"></div>
+                    </div>
+                    <br/>
+                    <div style="font-size:0.85rem; color:var(--muted); margin-bottom:10px;">{t['main_nums']}</div>
+                    {render_number_balls(p['numbers'])}
+                    <div style="font-size:0.85rem; color:var(--muted); margin:16px 0 8px;">{t['super_num']}</div>
+                    {render_number_balls([p['super_number']], 'extra')}
+                </div>
+            """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col2:
+        # Hot / Cold / Due
+        draws = hist_data["lotto"]["numbers"].tolist()
+        hcd = AIPredictor._hot_cold_due(draws, 49)
+        for label, key, style in [(t["hot"], "hot", "hot"), (t["cold"], "cold", "cold"), (t["due"], "due", "")]:
+            st.markdown(f"""
+                <div class="lp-card" style="margin-bottom:12px;">
+                    <div style="color:var(--muted); font-size:0.85rem; margin-bottom:10px;">{label}</div>
+                    {render_number_balls(hcd[key][:6], style)}
+                </div>
+            """, unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════════
+#  PAGE: EUROJACKPOT
+# ══════════════════════════════════════════════════════════════════
+elif page == "euro":
+    st.markdown(f"""
+        <div style="margin-bottom:32px;">
+            <h1 style="font-family:'Rajdhani',sans-serif; font-size:2.5rem; font-weight:700;">
+                🇪🇺 {t['nav_euro']}
+            </h1>
+            <div style="color:var(--muted);">5 aus 50 + 2 Eurozahlen · Dienstag & Freitag · Jackpot: {jackpots['euro']} MIO. €</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2 = st.columns([1, 1], gap="large")
+    with col1:
+        st.markdown('<div class="lp-card">', unsafe_allow_html=True)
+        if st.button(t["predict_btn"], key="euro_predict", use_container_width=True,
+                     type="primary"):
+            with st.spinner("KI analysiert Eurojackpot-Muster…"):
+                time.sleep(0.8)
+                st.session_state.euro_pred = predictor.predict_euro(hist_data["euro"])
+
+        if st.session_state.euro_pred:
+            p = st.session_state.euro_pred
+            conf = p["confidence"]
+            st.markdown(f"""
+                <div class="prediction-result">
+                    <div style="font-size:0.8rem; color:var(--muted); letter-spacing:0.1em; margin-bottom:12px;">
+                        {t['confidence']}
+                    </div>
+                    <div style="font-family:'Rajdhani',sans-serif; font-size:2.8rem;
+                                font-weight:700; color:#4eff9a; margin-bottom:4px;">
+                        {conf}%
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width:{conf}%; background:linear-gradient(90deg,#00b050,#4eff9a);"></div>
+                    </div>
+                    <br/>
+                    <div style="font-size:0.85rem; color:var(--muted); margin-bottom:10px;">{t['main_nums']}</div>
+                    {render_number_balls(p['main_numbers'], 'euro')}
+                    <div style="font-size:0.85rem; color:var(--muted); margin:16px 0 8px;">{t['euro_nums']}</div>
+                    {render_number_balls(p['extra_numbers'], 'extra')}
+                </div>
+            """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col2:
+        main_draws = hist_data["euro"]["main"].tolist()
+        extra_draws = hist_data["euro"]["extra"].tolist()
+        hcd_main  = AIPredictor._hot_cold_due(main_draws, 50)
+        hcd_extra = AIPredictor._hot_cold_due(extra_draws, 12)
+        st.markdown(f"""
+            <div class="lp-card" style="margin-bottom:12px;">
+                <div style="color:var(--muted); font-size:0.85rem; margin-bottom:10px;">{t['hot']} — Hauptzahlen</div>
+                {render_number_balls(hcd_main['hot'][:5], 'euro hot')}
+            </div>
+            <div class="lp-card" style="margin-bottom:12px;">
+                <div style="color:var(--muted); font-size:0.85rem; margin-bottom:10px;">{t['hot']} — Eurozahlen</div>
+                {render_number_balls(hcd_extra['hot'][:4], 'extra hot')}
+            </div>
+            <div class="lp-card">
+                <div style="color:var(--muted); font-size:0.85rem; margin-bottom:10px;">{t['due']} — Hauptzahlen</div>
+                {render_number_balls(hcd_main['due'][:5], 'euro')}
+            </div>
+        """, unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════════
+#  PAGE: STATS
+# ══════════════════════════════════════════════════════════════════
+elif page == "stats":
+    st.markdown(f"""
+        <h1 style="font-family:'Rajdhani',sans-serif; font-size:2.5rem;
+                   font-weight:700; margin-bottom:28px;">
+            📊 {t['nav_stats']}
+        </h1>
+    """, unsafe_allow_html=True)
+
+    tab1, tab2 = st.tabs(["Lotto 6aus49", "Eurojackpot"])
+
+    def build_freq_chart(draws, max_n, title, color):
+        flat = [x for row in draws for x in row]
+        freq = Counter(flat)
+        nums = list(range(1, max_n + 1))
+        counts = [freq.get(n, 0) for n in nums]
+        avg = np.mean(counts)
+        bar_colors = [color if c >= avg else "rgba(120,150,180,0.5)" for c in counts]
+        fig = go.Figure(go.Bar(
+            x=nums, y=counts,
+            marker=dict(color=bar_colors, line=dict(width=0)),
+            hovertemplate="<b>Zahl %{x}</b><br>Häufigkeit: %{y}<extra></extra>",
+        ))
+        fig.add_hline(y=avg, line_dash="dot", line_color="rgba(255,215,0,0.5)",
+                      annotation_text=f"Ø {avg:.1f}", annotation_font_color="#ffd700")
+        fig.update_layout(
+            title=dict(text=title, font=dict(size=16, color="#ffd700")),
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#7a9abf", family="Space Grotesk"),
+            xaxis=dict(showgrid=False, tickcolor="#7a9abf"),
+            yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
+            height=400, margin=dict(l=20, r=20, t=50, b=20),
+        )
+        return fig
+
+    with tab1:
+        draws_l = hist_data["lotto"]["numbers"].tolist()
+        fig_l = build_freq_chart(draws_l, 49, t["freq_title"] + " — Lotto 6aus49", "#ffd700")
+        st.plotly_chart(fig_l, use_container_width=True)
+
+        # Jackpot trend
+        df_l = hist_data["lotto"].tail(100)
+        fig_trend = go.Figure(go.Scatter(
+            x=df_l["date"], y=df_l["jackpot"],
+            mode="lines", fill="tozeroy",
+            line=dict(color="#ffd700", width=2),
+            fillcolor="rgba(255,215,0,0.08)",
+            hovertemplate="<b>%{x|%d.%m.%Y}</b><br>Jackpot: %{y:.1f} Mio. €<extra></extra>",
+        ))
+        fig_trend.update_layout(
+            title=dict(text="Jackpot-Verlauf — letzte 100 Ziehungen", font=dict(color="#ffd700")),
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#7a9abf", family="Space Grotesk"),
+            xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
+            height=320, margin=dict(l=20, r=20, t=50, b=20),
+        )
+        st.plotly_chart(fig_trend, use_container_width=True)
+
+        # Summary metrics
+        m1, m2, m3, m4 = st.columns(4)
+        jp = hist_data["lotto"]["jackpot"]
+        m1.metric("Analysierte Ziehungen", f"{len(hist_data['lotto']):,}")
+        m2.metric("Ø Jackpot", f"{jp.mean():.1f} Mio. €")
+        m3.metric("Max. Jackpot", f"{jp.max():.1f} Mio. €")
+        m4.metric("Aktuell", f"{jackpots['lotto']} Mio. €")
+
+    with tab2:
+        draws_e = hist_data["euro"]["main"].tolist()
+        fig_e = build_freq_chart(draws_e, 50, t["freq_title"] + " — Eurojackpot", "#4eff9a")
+        st.plotly_chart(fig_e, use_container_width=True)
+
+        m1, m2, m3, m4 = st.columns(4)
+        jp_e = hist_data["euro"]["jackpot"]
+        m1.metric("Analysierte Ziehungen", f"{len(hist_data['euro']):,}")
+        m2.metric("Ø Jackpot", f"{jp_e.mean():.1f} Mio. €")
+        m3.metric("Max. Jackpot", f"{jp_e.max():.1f} Mio. €")
+        m4.metric("Aktuell", f"{jackpots['euro']} Mio. €")
+
+
+# ══════════════════════════════════════════════════════════════════
+#  PAGE: PLAYER AREA
+# ══════════════════════════════════════════════════════════════════
+elif page == "player":
+    st.markdown(f"""
+        <h1 style="font-family:'Rajdhani',sans-serif; font-size:2.5rem;
+                   font-weight:700; margin-bottom:28px;">
+            🎮 {t['nav_player']}
+        </h1>
+    """, unsafe_allow_html=True)
+
+    col_picker, col_analysis = st.columns([1, 1], gap="large")
+
+    with col_picker:
+        st.markdown(f'<div class="section-title">🎯 {t["your_nums"]}</div>', unsafe_allow_html=True)
+        selected = st.session_state.user_numbers
+
+        # Number grid — 7 columns × 7 rows
+        for row_start in range(0, 49, 7):
+            cols = st.columns(7, gap="small")
+            for i, num in enumerate(range(row_start + 1, min(row_start + 8, 50))):
+                with cols[i]:
+                    is_sel = num in selected
+                    btn_label = f"**{num}**" if is_sel else str(num)
+                    if st.button(btn_label, key=f"pick_{num}", use_container_width=True):
+                        if is_sel:
+                            selected.remove(num)
+                        elif len(selected) < 6:
                             selected.append(num)
                             selected.sort()
                         st.rerun()
-    st.markdown(f"**Ausgewählt:** {', '.join(map(str,selected))} ({len(selected)}/6)")
 
-with col2:
-    if len(selected) == 6 and st.button("📊 ANALYSE STARTEN", use_container_width=True):
-        analysis = ai_predictor.analyze_user_behavior(selected)
-        st.session_state.current_analysis = analysis
-    
-    if 'current_analysis' in st.session_state:
-        a = st.session_state.current_analysis
-        st.markdown("### 🧠 KI-ANALYSE")
-        if a['ai_suggestion']:
+        # Status bar
+        remaining = 6 - len(selected)
+        st.markdown(f"""
+            <div style="display:flex; align-items:center; gap:12px; margin-top:16px;">
+                <div style="font-size:0.9rem; color:var(--muted);">
+                    {t['selected']}: <strong style="color:var(--gold);">{len(selected)}/6</strong>
+                </div>
+                {''.join(f'<span class="number-ball selected" style="width:36px;height:36px;font-size:0.9rem;">{n}</span>' for n in selected)}
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<br/>", unsafe_allow_html=True)
+
+        btn_cols = st.columns(2, gap="small")
+        with btn_cols[0]:
+            if st.button(f"🗑️ Leeren", key="clear_nums", use_container_width=True):
+                st.session_state.user_numbers = []
+                st.session_state.current_analysis = None
+                st.rerun()
+        with btn_cols[1]:
+            if st.button(f"🎲 Zufällig", key="random_nums", use_container_width=True):
+                st.session_state.user_numbers = sorted(random.sample(range(1, 50), 6))
+                st.rerun()
+
+        if len(selected) == 6:
+            if st.button(f"📊 {t['analyze']}", key="do_analyze", use_container_width=True,
+                         type="primary"):
+                with st.spinner("Analysiere…"):
+                    time.sleep(0.5)
+                    st.session_state.current_analysis = predictor.analyze_numbers(
+                        selected, hist_data["lotto"]
+                    )
+                st.rerun()
+
+    with col_analysis:
+        if st.session_state.current_analysis:
+            a = st.session_state.current_analysis
+            st.markdown(f'<div class="section-title">🧠 {t["nav_stats"]}</div>', unsafe_allow_html=True)
+
+            # Balance meters
+            e, o = a["even"], a["odd"]
+            l, h = a["low"], a["high"]
             st.markdown(f"""
-                <div style="background:linear-gradient(135deg,#0056b3,#00a651);padding:20px;border-radius:15px;">
-                    <div style="color:#ffd700;">🤖 KI-VORSCHLAG</div>
-                    <div style="font-size:2rem;color:white;text-align:center;">{' - '.join(map(str,a['ai_suggestion']))}</div>
+                <div class="lp-card" style="margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <span style="color:var(--muted); font-size:0.85rem;">Gerade / Ungerade</span>
+                        <span style="color:var(--text);">{e} / {o}</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width:{e/6*100:.0f}%; background:linear-gradient(90deg,#00e5ff,#0066cc);"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin:14px 0 8px;">
+                        <span style="color:var(--muted); font-size:0.85rem;">Niedrig (1-25) / Hoch (26-49)</span>
+                        <span style="color:var(--text);">{l} / {h}</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width:{l/6*100:.0f}%; background:linear-gradient(90deg,#ff4757,#ffd700);"></div>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
-        if a['recommendations']:
-            st.markdown("### 💡 EMPFEHLUNGEN")
-            for rec in a['recommendations']:
-                st.info(rec)
 
-# ==================== NAVIGATION ====================
-with st.sidebar:
-    st.markdown(f"""
-        <div style="text-align:center;margin-bottom:30px;">
-            <h1 style="color:#ffd700;">💰 LOTTO 24</h1>
-            <p style="color:#aaa;">{st.session_state.live_jackpots['euro']} MIO. €</p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    menu = option_menu(
-        None, [t['home'], t['lotto'], t['euro'], t['stats'], t['player']],
-        icons=['house-fill','dice-6-fill','globe-europe-africa','bar-chart-line-fill','controller'],
-        menu_icon="cast", default_index=0,
-        styles={
-            "container": {"padding":"0","background-color":"transparent"},
-            "icon": {"color":"#ffd700","font-size":"1.2rem"}, 
-            "nav-link": {"color":"#aaa","font-size":"1rem","padding":"15px"},
-            "nav-link-selected": {"background-color":"rgba(255,215,0,0.2)","color":"#ffd700"},
-        }
-    )
+            # AI suggestion
+            if a["ai_suggestion"]:
+                st.markdown(f"""
+                    <div class="lp-card" style="margin-bottom:12px; border-color:rgba(0,229,255,0.4);">
+                        <div style="color:var(--cyan); font-size:0.85rem; margin-bottom:10px;">🤖 {t['ai_tip']}</div>
+                        {render_number_balls(a['ai_suggestion'])}
+                    </div>
+                """, unsafe_allow_html=True)
 
-# ==================== PAGES ====================
-if menu == t['home']:
-    st.markdown(f"<div style='text-align:center;padding:20px;'><h1 style='color:#ffd700;'>{t['title']}</h1><p>{t['subtitle']}</p></div>", unsafe_allow_html=True)
+            # Recommendations
+            if a["recommendations"]:
+                st.markdown(f"""
+                    <div class="lp-card" style="margin-bottom:12px;">
+                        <div style="color:var(--gold); font-size:0.85rem; margin-bottom:10px;">💡 {t['recommendations']}</div>
+                """, unsafe_allow_html=True)
+                for rec in a["recommendations"]:
+                    st.markdown(f'<div style="color:var(--muted); font-size:0.9rem; margin:6px 0;">• {rec}</div>', unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
 
-elif menu == t['lotto']:
-    st.markdown(f"<h1 style='text-align:center;'>{t['lotto']}</h1>", unsafe_allow_html=True)
-    if st.button(t['predict_btn'], use_container_width=True):
-        st.session_state.lotto_pred = ai_predictor.predict_lotto_advanced()
-    if st.session_state.lotto_pred:
-        p = st.session_state.lotto_pred
-        st.markdown(f"<h2 style='color:#ffd700;text-align:center;'>{t['confidence']}: {p['confidence']}%</h2>", unsafe_allow_html=True)
-        cols = st.columns(7)
-        for i,num in enumerate(p['numbers']):
-            with cols[i]:
-                st.markdown(f"<div class='number-badge' style='width:80px;height:80px;font-size:2rem;'>{num}</div>", unsafe_allow_html=True)
-        with cols[6]:
-            st.markdown(f"<div class='number-badge' style='background:#ffd700;color:#0056b3;'>{p['super_number']}</div>", unsafe_allow_html=True)
+            # Frequency of selected numbers
+            st.markdown(f"""
+                <div class="lp-card">
+                    <div style="color:var(--muted); font-size:0.85rem; margin-bottom:10px;">📈 Häufigkeit Ihrer Zahlen</div>
+            """, unsafe_allow_html=True)
+            if selected and a["frequencies"]:
+                fig_freq = go.Figure(go.Bar(
+                    x=[str(n) for n in selected],
+                    y=a["frequencies"],
+                    marker_color=["#ffd700" if f > np.mean(a["frequencies"]) else "#7a9abf"
+                                  for f in a["frequencies"]],
+                    hovertemplate="Zahl %{x}: %{y} mal<extra></extra>",
+                ))
+                fig_freq.update_layout(
+                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#7a9abf"), height=200,
+                    xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
+                    margin=dict(l=10, r=10, t=10, b=20),
+                )
+                st.plotly_chart(fig_freq, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+                <div class="lp-card" style="text-align:center; padding:60px 24px; opacity:0.6;">
+                    <div style="font-size:3rem; margin-bottom:16px;">🎯</div>
+                    <div style="color:var(--muted);">
+                        Wähle 6 Zahlen aus und starte die KI-Analyse
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
 
-elif menu == t['euro']:
-    st.markdown(f"<h1 style='text-align:center;'>{t['euro']}</h1>", unsafe_allow_html=True)
-    if st.button(t['predict_btn'], use_container_width=True):
-        st.session_state.euro_pred = ai_predictor.predict_euro_advanced()
-    if st.session_state.euro_pred:
-        p = st.session_state.euro_pred
-        st.markdown(f"<h2 style='color:#ffd700;text-align:center;'>{t['confidence']}: {p['confidence']}%</h2>", unsafe_allow_html=True)
-        st.markdown(f"### {t['main_nums']}")
-        cols = st.columns(5)
-        for i,num in enumerate(p['main_numbers']):
-            with cols[i]:
-                st.markdown(f"<div class='number-badge' style='background:#00a651;'>{num}</div>", unsafe_allow_html=True)
-        st.markdown(f"### {t['euro_nums']}")
-        cols = st.columns(2)
-        for i,num in enumerate(p['extra_numbers']):
-            with cols[i]:
-                st.markdown(f"<div class='number-badge' style='background:#ffd700;color:#0056b3;'>{num}</div>", unsafe_allow_html=True)
 
-elif menu == t['stats']:
-    st.markdown(f"<h1 style='text-align:center;'>{t['stats']}</h1>", unsafe_allow_html=True)
-    if st.session_state.historical_data:
-        df = st.session_state.historical_data['lotto']
-        freq = ai_predictor.analyze_frequency(df['numbers'].tolist(), 49)
-        freq_df = pd.DataFrame(freq, columns=['Number','Frequency'])
-        fig = px.bar(freq_df, x='Number', y='Frequency', title=t['freq_analysis'])
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig, use_container_width=True)
-
-# ==================== FOOTER ====================
+# ══════════════════════════════════════════════════════════════════
+#  DISCLAIMER (global footer)
+# ══════════════════════════════════════════════════════════════════
 st.markdown(f"""
-    <div class="footer">
-        <p>{t['footer']}</p>
-        <p style='font-size:0.8rem;'>{t['disclaimer']}</p>
-        <p style='font-size:0.7rem;'>Live: {datetime.now().strftime('%H:%M:%S')}</p>
+    <div class="disclaimer-box">
+        ⚠️ {t['disclaimer']}
     </div>
 """, unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
