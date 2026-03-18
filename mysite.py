@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-AI Predictor Germany 2026 - Ultra-Professional Edition (Enhanced & Fixed)
+AI Predictor Germany 2026 - Ultra-Professional Edition (Full Integrated)
 Developed for next-gen hardware and high-performance analysis.
 """
 
@@ -59,7 +59,7 @@ if 'last_cleanup' not in st.session_state:
 
 # ==================== PREDICTION CACHE SYSTEM ====================
 class PredictionCache:
-    """Prediction cache for performance optimization"""
+    """ذاكرة تخزين مؤقتة للتنبؤات لتحسين الأداء"""
     def __init__(self):
         self.cache_file = 'predictions.cache'
         self.cache = self.load_cache()
@@ -93,12 +93,30 @@ if 'cache' not in st.session_state:
 # ==================== PERFORMANCE LOGGER ====================
 @contextmanager
 def performance_logger(component_name):
-    """Log performance of different components"""
+    """تسجيل أداء المكونات المختلفة"""
     start = time.time()
     yield
     end = time.time()
     if end - start > 0.5:
         print(f"⚡ {component_name} took {end-start:.3f}s")
+
+# ==================== DATA COMPRESSION UTILITIES ====================
+def compress_data(data):
+    """ضغط البيانات لتوفير المساحة"""
+    try:
+        return gzip.compress(json.dumps(data).encode())
+    except:
+        return data
+
+def decompress_data(compressed):
+    """فك ضغط البيانات"""
+    try:
+        return json.loads(gzip.decompress(compressed).decode())
+    except:
+        return compressed
+
+# ==================== SECURITY CONFIG ====================
+SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-2026')
 
 # ==================== TRANSLATION ENGINE ====================
 TRANS = {
@@ -190,7 +208,7 @@ TRANS = {
 
 t = TRANS[st.session_state.language]
 
-# ==================== ADVANCED CSS (ENHANCED 2026) ====================
+# ==================== ADVANCED CSS (FULL INTEGRATED) ====================
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Cairo:wght@400;700;900&display=swap');
@@ -200,8 +218,6 @@ st.markdown(f"""
         --secondary: #4facfe;
         --accent: #ffd700;
         --bg: #050a18;
-        --card-bg: rgba(255, 255, 255, 0.05);
-        --sidebar-bg: rgba(10, 20, 40, 0.95);
     }}
 
     * {{
@@ -240,30 +256,90 @@ st.markdown(f"""
         100% {{ transform: translate(-100%, 0); }}
     }}
 
-    /* Layout & Spacing */
-    .block-container {{
-        padding-top: 2rem !important;
-        padding-bottom: 2rem !important;
+    /* Progress Bar */
+    .progress-bar-container {{
+        width: 100%;
+        height: 30px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 15px;
+        overflow: hidden;
+        margin: 1rem 0;
     }}
 
-    /* Glass Cards with Enhanced Padding */
+    .progress-bar-fill {{
+        height: 100%;
+        background: linear-gradient(90deg, #00f2fe, #4facfe);
+        border-radius: 15px;
+        transition: width 1s ease-in-out;
+        position: relative;
+        overflow: hidden;
+    }}
+
+    .progress-bar-fill::after {{
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: shine 2s infinite;
+    }}
+
+    @keyframes shine {{
+        0% {{ transform: translateX(-100%); }}
+        100% {{ transform: translateX(100%); }}
+    }}
+
+    /* Futuristic Header */
+    .hero-section {{
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.1), rgba(79, 172, 254, 0.1));
+        padding: 4rem 2rem;
+        border-radius: 30px;
+        border: 1px solid rgba(0, 242, 254, 0.2);
+        text-align: center;
+        margin-bottom: 3rem;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }}
+
+    .hero-section h1 {{
+        font-size: 4rem;
+        font-weight: 900;
+        background: linear-gradient(to right, #00f2fe, #4facfe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 5px;
+    }}
+
+    /* Glass Cards */
     .glass-card {{
-        background: var(--card-bg);
+        background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 25px;
         padding: 35px;
         margin-bottom: 25px;
-        backdrop-filter: blur(15px);
         transition: all 0.4s ease;
     }}
 
     .glass-card:hover {{
+        transform: translateY(-5px);
         border-color: var(--primary);
         box-shadow: 0 10px 30px rgba(0, 242, 254, 0.15);
-        transform: translateY(-5px);
     }}
 
-    /* Icon Spacing */
+    /* Performance Badge */
+    .performance-badge {{
+        display: inline-block;
+        padding: 5px 12px;
+        background: rgba(0, 242, 254, 0.1);
+        border: 1px solid var(--primary);
+        border-radius: 50px;
+        font-size: 0.7rem;
+        color: var(--primary);
+        margin-top: 15px;
+    }}
+
+    /* Icon Box */
     .icon-box {{
         padding: 15px;
         background: rgba(0, 242, 254, 0.1);
@@ -272,34 +348,6 @@ st.markdown(f"""
         display: inline-flex;
         align-items: center;
         justify-content: center;
-    }}
-
-    /* Sidebar Enhancement */
-    [data-testid="stSidebar"] {{
-        background-color: var(--sidebar-bg);
-        border-right: 1px solid rgba(0, 242, 254, 0.2);
-    }}
-
-    /* Custom Metrics */
-    .metric-container {{
-        text-align: center;
-        padding: 25px;
-        border-radius: 20px;
-        background: rgba(255,255,255,0.03);
-    }}
-
-    .metric-value {{
-        font-size: 2.8rem;
-        font-weight: 900;
-        color: var(--primary);
-        text-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
-    }}
-
-    .metric-label {{
-        font-size: 0.9rem;
-        color: #aaa;
-        margin-top: 10px;
-        text-transform: uppercase;
     }}
 
     /* Futuristic Balls */
@@ -328,6 +376,34 @@ st.markdown(f"""
     .ball.special {{
         border-color: var(--accent);
         box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    }}
+
+    /* Metrics */
+    .metric-container {{
+        text-align: center;
+        padding: 25px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 20px;
+    }}
+
+    .metric-value {{
+        font-size: 2.8rem;
+        font-weight: 900;
+        color: var(--primary);
+    }}
+
+    .metric-label {{
+        font-size: 0.9rem;
+        color: #aaa;
+        text-transform: uppercase;
+    }}
+
+    .footer {{
+        margin-top: 60px;
+        padding: 40px;
+        text-align: center;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        color: #666;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -381,16 +457,19 @@ with st.sidebar:
     st.markdown(f"""
         <div style='text-align: center; padding: 30px 0;'>
             <h1 style='color: var(--primary); font-size: 1.8rem; margin-bottom: 5px;'>QUANTUM</h1>
-            <div style='height: 2px; background: linear-gradient(to right, transparent, var(--primary), transparent); margin-bottom: 10px;'></div>
             <p style='font-size: 0.7rem; color: #666; letter-spacing: 3px;'>CORE OS v2.6</p>
         </div>
     """, unsafe_allow_html=True)
     
-    # Presentation Mode Toggle (Organized)
-    st.markdown("<div style='padding: 0 10px 20px 10px;'>", unsafe_allow_html=True)
+    # Cleanup Session Function
+    def cleanup_session():
+        st.session_state.lotto_pred = None
+        st.session_state.euro_pred = None
+        st.session_state.last_cleanup = datetime.now()
+    
+    # Presentation Mode Toggle
     if st.button("🎯 " + t['presentation_mode'], use_container_width=True):
         st.session_state.presentation_mode = not st.session_state.presentation_mode
-    st.markdown("</div>", unsafe_allow_html=True)
     
     menu = option_menu(
         None, [t['home'], t['lotto'], t['euro'], t['stats'], t['settings']],
@@ -408,9 +487,9 @@ with st.sidebar:
 
 if menu == t['home']:
     st.markdown(f"""
-        <div style='text-align: center; padding: 40px 0;'>
-            <h1 style='font-size: 3.5rem; background: linear-gradient(to right, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>{t['title']}</h1>
-            <p style='font-size: 1.2rem; color: #888; letter-spacing: 5px;'>{t['subtitle']}</p>
+        <div class="hero-section">
+            <h1>{t['title']}</h1>
+            <p style="font-size: 1.5rem; opacity: 0.8; letter-spacing: 3px;">{t['subtitle']}</p>
         </div>
     """, unsafe_allow_html=True)
 
@@ -419,16 +498,18 @@ if menu == t['home']:
         st.markdown(f"""
             <div class="glass-card">
                 <h3 style='color: var(--primary);'><span class='icon-box'>🎲</span> {t['lotto']}</h3>
-                <p style='margin-top: 15px;'>Status: <span style="color: #00ff00;">Active</span></p>
+                <p style='margin-top: 15px;'>Status: <span style="color: #00ff00;">Active Analysis</span></p>
                 <p>Next Draw: {(datetime.now() + timedelta(days=2)).strftime('%d.%m.2026')}</p>
+                <div class='performance-badge'>⚡ Cache Ready</div>
             </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown(f"""
             <div class="glass-card">
                 <h3 style='color: var(--secondary);'><span class='icon-box'>🇪🇺</span> {t['euro']}</h3>
-                <p style='margin-top: 15px;'>Status: <span style="color: #00ff00;">Active</span></p>
+                <p style='margin-top: 15px;'>Status: <span style="color: #00ff00;">Active Analysis</span></p>
                 <p>Next Draw: {(datetime.now() + timedelta(days=4)).strftime('%d.%m.2026')}</p>
+                <div class='performance-badge'>⚡ Cache Ready</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -443,94 +524,87 @@ if menu == t['home']:
 elif menu == t['lotto']:
     st.markdown(f"<h1 style='text-align:center; padding: 30px;'>{t['lotto']}</h1>", unsafe_allow_html=True)
     
-    c1, c2, c3 = st.columns([1, 2, 1])
-    with c2:
-        if st.button(t['predict_btn']):
-            with st.spinner("QUANTUM CORE INITIALIZING..."):
+    if st.button(t['predict_btn']):
+        with st.spinner("QUANTUM CORE INITIALIZING..."):
+            with performance_logger("Lotto Prediction"):
                 st.session_state.lotto_pred = engine.generate_prediction('lotto')
-        
-        if st.session_state.lotto_pred:
-            p = st.session_state.lotto_pred
-            st.markdown(f"""
-                <div class="glass-card" style="text-align: center;">
-                    <h2 style="color: var(--accent);">{t['confidence']}: {p['confidence']}%</h2>
-                    <div class="ball-container">
-                        {" ".join([f'<div class="ball">{n}</div>' for n in p['main']])}
-                        <div class="ball special">{p['super']}</div>
-                    </div>
-                    <p style="color: #666; font-size: 0.8rem;">{t['last_update']}: {datetime.now().strftime('%H:%M:%S')}</p>
+    
+    if st.session_state.lotto_pred:
+        p = st.session_state.lotto_pred
+        st.markdown(f"""
+            <div class="glass-card" style="text-align: center;">
+                <h2 style="color: var(--accent);">{t['confidence']}: {p['confidence']}%</h2>
+                <div class="ball-container">
+                    {" ".join([f'<div class="ball">{n}</div>' for n in p['main']])}
+                    <div class="ball special">{p['super']}</div>
                 </div>
-            """, unsafe_allow_html=True)
+                <p style="color: #888;">{t['last_update']}: {datetime.now().strftime('%H:%M:%S')}</p>
+                <div class='performance-badge'>⚡ {t['cache_status']}: Active</div>
+            </div>
+        """, unsafe_allow_html=True)
 
 elif menu == t['euro']:
     st.markdown(f"<h1 style='text-align:center; padding: 30px;'>{t['euro']}</h1>", unsafe_allow_html=True)
     
-    c1, c2, c3 = st.columns([1, 2, 1])
-    with c2:
-        if st.button(t['predict_btn']):
-            with st.spinner("SYNCHRONIZING EUROPEAN NODES..."):
+    if st.button(t['predict_btn']):
+        with st.spinner("SYNCHRONIZING EUROPEAN NODES..."):
+            with performance_logger("Eurojackpot Prediction"):
                 st.session_state.euro_pred = engine.generate_prediction('euro')
-        
-        if st.session_state.euro_pred:
-            p = st.session_state.euro_pred
-            st.markdown(f"""
-                <div class="glass-card" style="text-align: center;">
-                    <h2 style="color: var(--accent);">{t['confidence']}: {p['confidence']}%</h2>
-                    <h4 style="margin-top:25px; color: var(--primary);">{t['main_nums']}</h4>
-                    <div class="ball-container">
-                        {" ".join([f'<div class="ball">{n}</div>' for n in p['main']])}
-                    </div>
-                    <h4 style="margin-top:25px; color: var(--accent);">{t['euro_nums']}</h4>
-                    <div class="ball-container">
-                        {" ".join([f'<div class="ball special">{n}</div>' for n in p['extra']])}
-                    </div>
+    
+    if st.session_state.euro_pred:
+        p = st.session_state.euro_pred
+        st.markdown(f"""
+            <div class="glass-card" style="text-align: center;">
+                <h2 style="color: var(--accent);">{t['confidence']}: {p['confidence']}%</h2>
+                <h4 style="margin-top:25px; color: var(--primary);">{t['main_nums']}</h4>
+                <div class="ball-container">
+                    {" ".join([f'<div class="ball">{n}</div>' for n in p['main']])}
                 </div>
-            """, unsafe_allow_html=True)
+                <h4 style="margin-top:25px; color: var(--accent);">{t['euro_nums']}</h4>
+                <div class="ball-container">
+                    {" ".join([f'<div class="ball special">{n}</div>' for n in p['extra']])}
+                </div>
+                <p style="color: #888;">{t['last_update']}: {datetime.now().strftime('%H:%M:%S')}</p>
+                <div class='performance-badge'>⚡ {t['cache_status']}: Active</div>
+            </div>
+        """, unsafe_allow_html=True)
 
 elif menu == t['stats']:
     st.markdown(f"<h1 style='text-align:center; padding: 30px;'>{t['stats']}</h1>", unsafe_allow_html=True)
-    data = engine.get_historical_data('lotto')
-    
-    m1, m2, m3 = st.columns(3)
-    with m1:
-        st.markdown(f"<div class='metric-container'><div class='metric-value'>500</div><div class='metric-label'>{t['total_draws']}</div></div>", unsafe_allow_html=True)
-    with m2:
-        st.markdown(f"<div class='metric-container'><div class='metric-value'>{data['jackpot'].mean():.1f}M</div><div class='metric-label'>{t['avg_jackpot']}</div></div>", unsafe_allow_html=True)
-    with m3:
-        st.markdown(f"<div class='metric-container'><div class='metric-value'>{data['jackpot'].max():.1f}M</div><div class='metric-label'>{t['max_jackpot']}</div></div>", unsafe_allow_html=True)
+    with performance_logger("Analytics Page"):
+        data = engine.get_historical_data('lotto')
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.markdown(f"<div class='metric-container'><div class='metric-value'>500</div><div class='metric-label'>{t['total_draws']}</div></div>", unsafe_allow_html=True)
+        with m2:
+            st.markdown(f"<div class='metric-container'><div class='metric-value'>{data['jackpot'].mean():.1f}M</div><div class='metric-label'>{t['avg_jackpot']}</div></div>", unsafe_allow_html=True)
+        with m3:
+            st.markdown(f"<div class='metric-container'><div class='metric-value'>{data['jackpot'].max():.1f}M</div><div class='metric-label'>{t['max_jackpot']}</div></div>", unsafe_allow_html=True)
 
-    st.markdown("<div style='margin-top: 40px;'>", unsafe_allow_html=True)
-    fig = px.line(data, x='date', y='jackpot', title=t['trend'], template='plotly_dark')
-    fig.update_traces(line_color='#00f2fe', line_width=3)
-    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=20, r=20, t=50, b=20))
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+        fig = px.line(data, x='date', y='jackpot', title=t['trend'], template='plotly_dark')
+        fig.update_traces(line_color='#00f2fe', line_width=3)
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig, use_container_width=True)
 
 elif menu == t['settings']:
     st.markdown(f"<h1 style='text-align:center; padding: 30px;'>{t['settings']}</h1>", unsafe_allow_html=True)
-    
     with st.container():
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-        
-        # Language Section
-        st.markdown(f"### 🌐 {t['lang_label']}")
+        st.subheader(t['lang_label'])
         lang_choice = st.radio("", ['de', 'en', 'ar'], 
                                format_func=lambda x: {'de': '🇩🇪 Deutsch', 'en': '🇬🇧 English', 'ar': '🇸🇦 العربية'}[x],
                                horizontal=True)
         
-        st.markdown("<div style='margin: 30px 0;'></div>", unsafe_allow_html=True)
-        
-        # Performance Section
         st.markdown(f"### ⚡ {t['performance']}")
         p_col1, p_col2 = st.columns(2)
         with p_col1:
-            st.markdown(f"<div style='padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px;'>**Cache Status:** ✅ Active</div>", unsafe_allow_html=True)
+            st.markdown(f"**PyArrow:** {'✅' if PYARROW_AVAILABLE else '❌'}")
+            st.markdown(f"**Cache:** ✅ Active")
         with p_col2:
-            st.markdown(f"<div style='padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px;'>**Compression:** ✅ Enabled</div>", unsafe_allow_html=True)
-            
-        st.markdown("<div style='margin: 30px 0;'></div>", unsafe_allow_html=True)
+            st.markdown(f"**Session Cleanup:** Every hour")
+            st.markdown(f"**Compression:** ✅ GZIP")
         
-        if st.button("🚀 APPLY CONFIGURATION", use_container_width=True):
+        if st.button("🚀 SAVE & APPLY CONFIG", use_container_width=True):
             st.session_state.language = lang_choice
             st.rerun()
         
@@ -539,8 +613,9 @@ elif menu == t['settings']:
 
 # --- FOOTER ---
 st.markdown(f"""
-    <div style='margin-top: 60px; padding: 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); color: #666;'>
+    <div class="footer">
         <p style='font-weight: bold; color: var(--primary);'>{t['footer']}</p>
         <p style='font-size: 0.75rem; max-width: 800px; margin: 15px auto;'>{t['disclaimer']}</p>
+        <p style="font-size: 0.6rem; margin-top: 1rem;">⚡ Performance Optimized | Cache: Active | PyArrow: {'✅' if PYARROW_AVAILABLE else '❌'}</p>
     </div>
 """, unsafe_allow_html=True)
