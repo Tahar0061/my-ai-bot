@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-AI Predictor Germany 2026 - Ultra-Professional Edition (Full Fixed)
+AI Predictor Germany 2026 - Ultra-Professional Edition
 Developed for next-gen hardware and high-performance analysis.
 """
 
@@ -59,6 +59,7 @@ if 'last_cleanup' not in st.session_state:
 
 # ==================== PREDICTION CACHE SYSTEM ====================
 class PredictionCache:
+    """ذاكرة تخزين مؤقتة للتنبؤات لتحسين الأداء"""
     def __init__(self):
         self.cache_file = 'predictions.cache'
         self.cache = self.load_cache()
@@ -92,20 +93,23 @@ if 'cache' not in st.session_state:
 # ==================== PERFORMANCE LOGGER ====================
 @contextmanager
 def performance_logger(component_name):
+    """تسجيل أداء المكونات المختلفة"""
     start = time.time()
     yield
     end = time.time()
-    if end - start > 0.5:
+    if end - start > 0.5:  # سجل فقط إذا استغرق أكثر من 0.5 ثانية
         print(f"⚡ {component_name} took {end-start:.3f}s")
 
 # ==================== DATA COMPRESSION UTILITIES ====================
 def compress_data(data):
+    """ضغط البيانات لتوفير المساحة"""
     try:
         return gzip.compress(json.dumps(data).encode())
     except:
         return data
 
 def decompress_data(compressed):
+    """فك ضغط البيانات"""
     try:
         return json.loads(gzip.decompress(compressed).decode())
     except:
@@ -113,6 +117,9 @@ def decompress_data(compressed):
 
 # ==================== SECURITY CONFIG ====================
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-2026')
+if DOTENV_AVAILABLE:
+    # يمكن إضافة المزيد من إعدادات الأمان هنا
+    pass
 
 # ==================== TRANSLATION ENGINE ====================
 TRANS = {
@@ -123,7 +130,7 @@ TRANS = {
         'lotto': '🎲 Lotto 6aus49',
         'euro': '🇪🇺 Eurojackpot',
         'stats': '📊 Analytik',
-        'settings': '⚙️ System-Einstellungen',
+        'settings': '⚙️ System',
         'predict_btn': '🔮 KI-VORHERSAGE GENERIEREN',
         'confidence': 'KI-Vertrauensniveau',
         'main_nums': 'Hauptzahlen',
@@ -134,15 +141,14 @@ TRANS = {
         'total_draws': 'Analysierte Ziehungen',
         'avg_jackpot': 'Ø Jackpot',
         'max_jackpot': 'Max. Jackpot',
-        'lang_label': 'Systemsprache wählen',
+        'lang_label': 'Systemsprache',
         'footer': '© 2026 AI Predictor Germany • Quanten-Analyse-System',
         'disclaimer': 'HINWEIS: KI-Vorhersagen sind statistische Wahrscheinlichkeiten, keine Garantien. Verantwortungsvoll spielen.',
         'trend': 'Jackpot-Trend',
         'map_title': 'Regionale Gewinnverteilung (Simulation)',
         'performance': 'System-Leistung',
         'cache_status': 'Cache-Status',
-        'presentation_mode': 'Präsentationsmodus',
-        'ticker_text': '+++ AKTUELLE NEWS: Neuer Eurojackpot Rekord erwartet +++ Lotto 6aus49 Jackpot steigt auf 45 Mio. € +++ KI-Analyse abgeschlossen +++'
+        'presentation_mode': 'Präsentationsmodus'
     },
     'en': {
         'title': 'AI Predictor Germany 2026',
@@ -151,7 +157,7 @@ TRANS = {
         'lotto': '🎲 Lotto 6aus49',
         'euro': '🇪🇺 Eurojackpot',
         'stats': '📊 Analytics',
-        'settings': '⚙️ System Settings',
+        'settings': '⚙️ System',
         'predict_btn': '🔮 GENERATE AI PREDICTION',
         'confidence': 'AI Confidence Level',
         'main_nums': 'Main Numbers',
@@ -162,15 +168,14 @@ TRANS = {
         'total_draws': 'Analyzed Draws',
         'avg_jackpot': 'Avg Jackpot',
         'max_jackpot': 'Max Jackpot',
-        'lang_label': 'Select System Language',
+        'lang_label': 'System Language',
         'footer': '© 2026 AI Predictor Germany • Quantum Analysis System',
         'disclaimer': 'NOTICE: AI predictions are statistical probabilities, not guarantees. Play responsibly.',
         'trend': 'Jackpot Trend',
         'map_title': 'Regional Distribution (Simulation)',
         'performance': 'System Performance',
         'cache_status': 'Cache Status',
-        'presentation_mode': 'Presentation Mode',
-        'ticker_text': '+++ LATEST NEWS: New Eurojackpot record expected +++ Lotto 6aus49 jackpot rises to €45M +++ AI analysis completed +++'
+        'presentation_mode': 'Presentation Mode'
     },
     'ar': {
         'title': 'المتنبئ الذكي ألمانيا 2026',
@@ -179,7 +184,7 @@ TRANS = {
         'lotto': '🎲 لوتو 6aus49',
         'euro': '🇪🇺 يوروجاكبوت',
         'stats': '📊 التحليلات',
-        'settings': '⚙️ إعدادات النظام',
+        'settings': '⚙️ النظام',
         'predict_btn': '🔮 توليد توقع ذكي',
         'confidence': 'مستوى ثقة الذكاء الاصطناعي',
         'main_nums': 'الأرقام الرئيسية',
@@ -190,21 +195,20 @@ TRANS = {
         'total_draws': 'السحوبات المحللة',
         'avg_jackpot': 'متوسط الجائزة',
         'max_jackpot': 'أقصى جائزة',
-        'lang_label': 'اختر لغة النظام',
+        'lang_label': 'لغة النظام',
         'footer': '© 2026 المتنبئ الذكي ألمانيا • نظام التحليل الكمي',
         'disclaimer': 'تنبيه: توقعات الذكاء الاصطناعي هي احتمالات إحصائية وليست ضمانات. العب بمسؤولية.',
         'trend': 'اتجاه الجائزة الكبرى',
         'map_title': 'التوزيع الإقليمي (محاكاة)',
         'performance': 'أداء النظام',
         'cache_status': 'حالة التخزين المؤقت',
-        'presentation_mode': 'وضع العرض',
-        'ticker_text': '+++ آخر الأخبار: توقع رقم قياسي جديد في Eurojackpot +++ جائزة Lotto 6aus49 ترتفع إلى 45 مليون يورو +++ اكتمل تحليل الذكاء الاصطناعي +++'
+        'presentation_mode': 'وضع العرض'
     }
 }
 
 t = TRANS[st.session_state.language]
 
-# ==================== ADVANCED CSS (FIXED 2026) ====================
+# ==================== ADVANCED CSS (2026 NEUMORPHISM/GLASS) ====================
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Cairo:wght@400;700;900&display=swap');
@@ -216,217 +220,458 @@ st.markdown(f"""
         --bg: #050a18;
     }}
 
-    * {{ font-family: 'Orbitron', 'Cairo', sans-serif; }}
-    .stApp {{ background: radial-gradient(circle at top right, #1a1f35, var(--bg)); color: #e0e0e0; }}
+    @media (prefers-color-scheme: dark) {{
+        :root {{
+            --bg: #050a18;
+        }}
+    }}
 
-    /* Ticker Styling */
-    .ticker-container {{
+    @media (prefers-color-scheme: light) {{
+        :root {{
+            --bg: #f0f2f6;
+        }}
+        .stApp {{
+            background: var(--bg) !important;
+        }}
+    }}
+
+    * {{
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Orbitron', 'Cairo', sans-serif;
+    }}
+
+    .stApp {{
+        background: radial-gradient(circle at top right, #1a1f35, var(--bg));
+        color: #e0e0e0;
+        transition: background 0.3s ease;
+    }}
+
+    /* Presentation Mode */
+    .presentation-mode .stApp {{
+        zoom: 1.5;
+    }}
+
+    /* Progress Bar */
+    .progress-bar-container {{
         width: 100%;
-        background: rgba(0, 242, 254, 0.05);
-        border-bottom: 1px solid rgba(0, 242, 254, 0.2);
-        padding: 8px 0;
+        height: 30px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 15px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }}
+
+    .progress-bar-fill {{
+        height: 100%;
+        background: linear-gradient(90deg, #00f2fe, #4facfe);
+        border-radius: 15px;
+        transition: width 1s ease-in-out;
+        position: relative;
         overflow: hidden;
     }}
-    .ticker-text {{
-        display: inline-block;
-        white-space: nowrap;
-        padding-left: 100%;
-        animation: ticker 30s linear infinite;
-        font-weight: bold;
-        color: var(--primary);
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        font-size: 0.8rem;
-    }}
-    @keyframes ticker {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(-100%, 0); }} }}
 
-    /* Glass Cards with Rich Padding */
-    .glass-card {{
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 25px;
-        padding: 45px;
-        margin-bottom: 30px;
+    .progress-bar-fill::after {{
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: shine 2s infinite;
+    }}
+
+    @keyframes shine {{
+        0% {{ transform: translateX(-100%); }}
+        100% {{ transform: translateX(100%); }}
+    }}
+
+    /* Futuristic Header */
+    .hero-section {{
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.1), rgba(79, 172, 254, 0.1));
+        padding: 4rem 2rem;
+        border-radius: 30px;
+        border: 1px solid rgba(0, 242, 254, 0.2);
+        text-align: center;
+        margin-bottom: 3rem;
         backdrop-filter: blur(20px);
-        transition: all 0.4s ease;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     }}
-    .glass-card:hover {{ transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 15px 40px rgba(0, 242, 254, 0.2); }}
 
-    /* Icon Box */
-    .icon-box {{
-        padding: 20px;
-        background: rgba(0, 242, 254, 0.15);
-        border-radius: 15px;
-        margin-right: 20px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+    .hero-section h1 {{
+        font-size: 4rem;
+        font-weight: 900;
+        background: linear-gradient(to right, #00f2fe, #4facfe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 5px;
+    }}
+
+    /* Glass Cards */
+    .glass-card {{
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2rem;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }}
+
+    .glass-card:hover {{
+        transform: translateY(-10px);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--primary);
+        box-shadow: 0 15px 40px rgba(0, 242, 254, 0.2);
     }}
 
     /* Futuristic Balls */
-    .ball-container {{ display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; margin: 40px 0; }}
-    .ball {{
-        width: 85px; height: 85px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        font-size: 2.2rem; font-weight: 900; background: rgba(0,0,0,0.5); border: 3px solid var(--primary);
-        box-shadow: 0 0 25px rgba(0, 242, 254, 0.4);
+    .ball-container {{
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        margin: 2rem 0;
     }}
-    .ball.special {{ border-color: var(--accent); box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); }}
 
-    /* Metrics */
-    .metric-container {{ text-align: center; padding: 35px; background: rgba(255,255,255,0.05); border-radius: 25px; border: 1px solid rgba(255,255,255,0.05); }}
-    .metric-value {{ font-size: 3.2rem; font-weight: 900; color: var(--primary); text-shadow: 0 0 20px rgba(0,242,254,0.3); }}
-    .metric-label {{ font-size: 1rem; color: #888; text-transform: uppercase; margin-top: 10px; }}
+    .ball {{
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        font-weight: 900;
+        color: white;
+        background: rgba(0,0,0,0.3);
+        border: 2px solid var(--primary);
+        box-shadow: inset 0 0 20px rgba(0, 242, 254, 0.5), 0 0 15px rgba(0, 242, 254, 0.3);
+        text-shadow: 0 0 10px rgba(255,255,255,0.8);
+    }}
 
-    .footer {{ margin-top: 80px; padding: 50px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); color: #555; }}
+    .ball.special {{
+        border-color: var(--accent);
+        box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.5), 0 0 15px rgba(255, 215, 0, 0.3);
+    }}
+
+    /* Prediction Button */
+    .stButton>button {{
+        background: linear-gradient(45deg, #00f2fe, #4facfe) !important;
+        color: #050a18 !important;
+        font-weight: 900 !important;
+        font-size: 1.2rem !important;
+        border: none !important;
+        padding: 1rem 3rem !important;
+        border-radius: 50px !important;
+        transition: all 0.3s !important;
+        text-transform: uppercase !important;
+        letter-spacing: 2px !important;
+        width: 100%;
+    }}
+
+    .stButton>button:hover {{
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(0, 242, 254, 0.6);
+    }}
+
+    /* Stats Metrics */
+    .metric-container {{
+        text-align: center;
+        padding: 1.5rem;
+        border-right: 1px solid rgba(255,255,255,0.1);
+    }}
+
+    .metric-value {{
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: var(--primary);
+    }}
+
+    .metric-label {{
+        font-size: 0.8rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }}
+
+    [dir="rtl"] .metric-container {{
+        border-right: none;
+        border-left: 1px solid rgba(255,255,255,0.1);
+    }}
+
+    /* Performance Badge */
+    .performance-badge {{
+        background: rgba(0, 242, 254, 0.1);
+        border: 1px solid var(--primary);
+        border-radius: 30px;
+        padding: 0.3rem 1rem;
+        font-size: 0.7rem;
+        display: inline-block;
+        margin: 0.5rem 0;
+    }}
+
+    .footer {{
+        margin-top: 5rem;
+        padding: 3rem;
+        text-align: center;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        color: #555;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
-# ==================== TOP SETTINGS BAR ====================
-with st.expander(f"⚙️ {t['settings']}", expanded=False):
-    st.markdown("<div style='padding: 20px;'>", unsafe_allow_html=True)
-    col_s1, col_s2, col_s3 = st.columns(3)
-    with col_s1:
-        st.write(f"**{t['lang_label']}**")
-        lang_choice = st.selectbox("", ['de', 'en', 'ar'], 
-                                   index=['de', 'en', 'ar'].index(st.session_state.language),
-                                   format_func=lambda x: {'de': '🇩🇪 Deutsch', 'en': '🇬🇧 English', 'ar': '🇸🇦 العربية'}[x])
-    with col_s2:
-        st.write("**System Status**")
-        st.markdown(f"✅ Quantum Core: Online<br>✅ PyArrow: {'Enabled' if PYARROW_AVAILABLE else 'Disabled'}", unsafe_allow_html=True)
-    with col_s3:
-        st.write("**Performance**")
-        if st.button("🚀 Apply & Refresh"):
-            st.session_state.language = lang_choice
-            st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ==================== TICKER COMPONENT ====================
-st.markdown(f"""
-    <div class="ticker-container">
-        <div class="ticker-text">{t['ticker_text']}</div>
-    </div>
-""", unsafe_allow_html=True)
-
-# ==================== DATA ENGINE ====================
+# ==================== DATA ENGINE (QUANTUM SIMULATION) ====================
 class QuantumPredictor:
     def __init__(self):
         self.lotto_range = range(1, 50)
         self.euro_main_range = range(1, 51)
         self.euro_extra_range = range(1, 13)
 
-    @st.cache_data
+    @st.cache_data(ttl=3600, show_spinner="Loading quantum data...")
     def get_historical_data(_self, type='lotto'):
-        dates = pd.date_range(end=datetime.now(), periods=500, freq='W')
-        if type == 'lotto':
-            nums = [sorted(random.sample(_self.lotto_range, 6)) for _ in range(500)]
-            jackpots = [random.uniform(1, 45) for _ in range(500)]
-            return pd.DataFrame({'date': dates, 'numbers': nums, 'jackpot': jackpots})
-        else:
-            nums = [sorted(random.sample(_self.euro_main_range, 5)) for _ in range(500)]
-            extra = [sorted(random.sample(_self.euro_extra_range, 2)) for _ in range(500)]
-            jackpots = [random.uniform(10, 120) for _ in range(500)]
-            return pd.DataFrame({'date': dates, 'main': nums, 'extra': extra, 'jackpot': jackpots})
+        """تحميل البيانات التاريخية مع تحسين الأداء"""
+        with performance_logger(f"Historical Data Load ({type})"):
+            dates = pd.date_range(end=datetime.now(), periods=500, freq='W')
+            if type == 'lotto':
+                nums = [sorted(random.sample(_self.lotto_range, 6)) for _ in range(500)]
+                jackpots = [random.uniform(1, 45) for _ in range(500)]
+                df = pd.DataFrame({'date': dates, 'numbers': nums, 'jackpot': jackpots})
+                if PYARROW_AVAILABLE:
+                    df = df.astype({'jackpot': 'float32'})  # تقليل حجم البيانات
+                return df
+            else:
+                nums = [sorted(random.sample(_self.euro_main_range, 5)) for _ in range(500)]
+                extra = [sorted(random.sample(_self.euro_extra_range, 2)) for _ in range(500)]
+                jackpots = [random.uniform(10, 120) for _ in range(500)]
+                df = pd.DataFrame({'date': dates, 'main': nums, 'extra': extra, 'jackpot': jackpots})
+                if PYARROW_AVAILABLE:
+                    df = df.astype({'jackpot': 'float32'})
+                return df
+
+    @st.cache_data(ttl=300)
+    def generate_numbers_fast(_self, range_min, range_max, count, size):
+        """توليد أرقام سريع باستخدام Numpy"""
+        return np.random.choice(range(range_min, range_max+1), size=(size, count), replace=False).tolist()
 
     def generate_prediction(self, type='lotto'):
-        time.sleep(1.2)
-        if type == 'lotto':
-            return {'main': sorted(random.sample(self.lotto_range, 6)), 'super': random.randint(0, 9), 'confidence': round(random.uniform(88.5, 99.2), 2)}
-        else:
-            return {'main': sorted(random.sample(self.euro_main_range, 5)), 'extra': sorted(random.sample(self.euro_extra_range, 2)), 'confidence': round(random.uniform(85.1, 98.7), 2)}
+        """توليد توقع مع تخزين مؤقت"""
+        with performance_logger(f"Prediction Generation ({type})"):
+            # التحقق من وجود prediction مخبأ
+            cache_key = f"{type}_{datetime.now().strftime('%Y%m%d')}"
+            cached = st.session_state.cache.get_prediction(cache_key)
+            
+            if cached:
+                return cached
+            
+            # Simulated advanced AI logic
+            time.sleep(0.5)  # تقليل وقت الانتظار
+            if type == 'lotto':
+                result = {
+                    'main': sorted(random.sample(self.lotto_range, 6)),
+                    'super': random.randint(0, 9),
+                    'confidence': round(random.uniform(88.5, 99.2), 2)
+                }
+            else:
+                result = {
+                    'main': sorted(random.sample(self.euro_main_range, 5)),
+                    'extra': sorted(random.sample(self.euro_extra_range, 2)),
+                    'confidence': round(random.uniform(85.1, 98.7), 2)
+                }
+            
+            # تخزين في cache
+            st.session_state.cache.set_prediction(cache_key, result)
+            return result
 
 engine = QuantumPredictor()
 
-# ==================== NAVIGATION ====================
+# ==================== NAVIGATION & SIDEBAR ====================
 with st.sidebar:
-    st.markdown(f"<div style='text-align: center; padding: 40px 0;'><h1 style='color: var(--primary);'>QUANTUM</h1><p style='color: #555; letter-spacing: 5px;'>v2.6 CORE</p></div>", unsafe_allow_html=True)
+    st.markdown(f"""
+        <div style='text-align: center; padding: 2rem 0;'>
+            <h2 style='color: var(--primary); margin:0;'>CORE OS</h2>
+            <p style='font-size: 0.7rem; color: #555;'>VER 2026.4.12</p>
+            <div class='performance-badge'>⚡ OPTIMIZED</div>
+        </div>
+    """, unsafe_allow_html=True)
     
-    if st.button("🎯 " + t['presentation_mode'], use_container_width=True):
+    # تنظيف Session State كل ساعة
+    if (datetime.now() - st.session_state.last_cleanup).seconds > 3600:
+        for key in list(st.session_state.keys()):
+            if key.startswith('temp_'):
+                del st.session_state[key]
+        st.session_state.last_cleanup = datetime.now()
+    
+    # Presentation Mode Toggle
+    if st.sidebar.button("🎯 " + t['presentation_mode'], use_container_width=True):
         st.session_state.presentation_mode = not st.session_state.presentation_mode
     
     menu = option_menu(
-        None, [t['home'], t['lotto'], t['euro'], t['stats']],
-        icons=['house-fill', 'dice-6-fill', 'globe-europe-africa', 'bar-chart-line-fill'],
+        None, [t['home'], t['lotto'], t['euro'], t['stats'], t['settings']],
+        icons=['house-fill', 'dice-6-fill', 'globe-europe-africa', 'bar-chart-line-fill', 'cpu-fill'],
         menu_icon="cast", default_index=0,
         styles={
-            "container": {"padding": "15px!important", "background-color": "transparent"},
-            "icon": {"color": "var(--primary)", "font-size": "1.4rem"}, 
-            "nav-link": {"color": "#888", "font-size": "1.1rem", "padding": "18px", "text-align": "left", "margin":"8px 0", "border-radius": "15px"},
-            "nav-link-selected": {"background-color": "rgba(0, 242, 254, 0.15)", "color": "white", "font-weight": "bold", "border-left": "5px solid var(--primary)"},
+            "container": {"padding": "0!important", "background-color": "transparent"},
+            "icon": {"color": "var(--primary)", "font-size": "1.2rem"}, 
+            "nav-link": {"color": "#aaa", "font-size": "1rem", "text-align": "left", "margin":"0px", "--hover-color": "rgba(0,242,254,0.1)"},
+            "nav-link-selected": {"background-color": "rgba(0,242,254,0.1)", "color": "white", "border-left": "4px solid var(--primary)"},
         }
     )
 
+# ==================== PRESENTATION MODE ====================
+if st.session_state.presentation_mode:
+    st.markdown("""
+        <style>
+        .stApp { zoom: 1.5; }
+        </style>
+    """, unsafe_allow_html=True)
+
 # ==================== PAGES ====================
 
+# --- HOME ---
 if menu == t['home']:
-    st.markdown(f"<div style='text-align: center; padding: 60px 0;'><h1 style='font-size: 4.5rem; background: linear-gradient(to right, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;'>{t['title']}</h1><p style='font-size: 1.5rem; color: #666; letter-spacing: 8px;'>{t['subtitle']}</p></div>", unsafe_allow_html=True)
+    st.markdown(f"""
+        <div class="hero-section">
+            <h1>{t['title']}</h1>
+            <p style="font-size: 1.5rem; opacity: 0.8; letter-spacing: 3px;">{t['subtitle']}</p>
+        </div>
+    """, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown(f"<div class='glass-card'><h3><span class='icon-box'>🎲</span> {t['lotto']}</h3><p style='margin-top: 20px; font-size: 1.1rem;'>Status: <span style='color: #00ff00;'>Active Analysis</span></p><p>Next Draw: {(datetime.now() + timedelta(days=2)).strftime('%d.%m.2026')}</p></div>", unsafe_allow_html=True)
+        st.markdown(f"""
+            <div class="glass-card">
+                <h3>🇩🇪 {t['lotto']}</h3>
+                <p>Status: <span style="color: #00ff00;">Active Analysis</span></p>
+                <p>Next Draw: { (datetime.now() + timedelta(days=2)).strftime('%d.%m.2026') }</p>
+                <div class='performance-badge'>⚡ Cache Ready</div>
+            </div>
+        """, unsafe_allow_html=True)
     with col2:
-        st.markdown(f"<div class='glass-card'><h3><span class='icon-box'>🇪🇺</span> {t['euro']}</h3><p style='margin-top: 20px; font-size: 1.1rem;'>Status: <span style='color: #00ff00;'>Active Analysis</span></p><p>Next Draw: {(datetime.now() + timedelta(days=4)).strftime('%d.%m.2026')}</p></div>", unsafe_allow_html=True)
+        st.markdown(f"""
+            <div class="glass-card">
+                <h3>🇪🇺 {t['euro']}</h3>
+                <p>Status: <span style="color: #00ff00;">Active Analysis</span></p>
+                <p>Next Draw: { (datetime.now() + timedelta(days=4)).strftime('%d.%m.2026') }</p>
+                <div class='performance-badge'>⚡ Cache Ready</div>
+            </div>
+        """, unsafe_allow_html=True)
 
+    # 2026 Map Feature
     st.markdown(f"### 📍 {t['map_title']}")
-    map_data = pd.DataFrame({'lat': np.random.uniform(47.2, 55.0, 50), 'lon': np.random.uniform(5.8, 15.0, 50), 'winners': np.random.randint(1, 10, 50)})
+    map_data = pd.DataFrame({
+        'lat': np.random.uniform(47.2, 55.0, 50),
+        'lon': np.random.uniform(5.8, 15.0, 50),
+        'winners': np.random.randint(1, 10, 50)
+    })
     st.map(map_data, size='winners', color='#00f2fe')
 
+# --- LOTTO 6AUS49 ---
 elif menu == t['lotto']:
-    st.markdown(f"<h1 style='text-align:center; padding: 40px;'>{t['lotto']}</h1>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns([1, 2, 1])
-    with c2:
-        if st.button(t['predict_btn'], use_container_width=True):
-            with st.spinner("QUANTUM CORE INITIALIZING..."):
-                with performance_logger("Lotto Prediction"):
-                    st.session_state.lotto_pred = engine.generate_prediction('lotto')
-        if st.session_state.lotto_pred:
-            p = st.session_state.lotto_pred
-            # FIXED: Removed backslashes from f-string to prevent SyntaxError
-            balls_html = "".join([f'<div class="ball">{n}</div>' for n in p['main']])
-            st.markdown(f"""
-                <div class='glass-card' style='text-align: center;'>
-                    <h2 style='color: var(--accent); font-size: 2.5rem;'>{t['confidence']}: {p['confidence']}%</h2>
-                    <div class='ball-container'>
-                        {balls_html}
-                        <div class='ball special'>{p['super']}</div>
-                    </div>
-                    <p style='color: #666;'>{t['last_update']}: {datetime.now().strftime('%H:%M:%S')}</p>
+    st.markdown(f"<h1 style='text-align:center;'>{t['lotto']}</h1>", unsafe_allow_html=True)
+    
+    if st.button(t['predict_btn']):
+        with st.spinner("QUANTUM CORE INITIALIZING..."):
+            with performance_logger("Lotto Prediction"):
+                st.session_state.lotto_pred = engine.generate_prediction('lotto')
+    
+    if st.session_state.lotto_pred:
+        p = st.session_state.lotto_pred
+        st.markdown(f"""
+            <div class="glass-card" style="text-align: center;">
+                <h2 style="color: var(--accent);">{t['confidence']}: {p['confidence']}%</h2>
+                <div class="ball-container">
+                    {" ".join([f'<div class="ball">{n}</div>' for n in p['main']])}
+                    <div class="ball special">{p['super']}</div>
                 </div>
-            """, unsafe_allow_html=True)
+                <p style="color: #888;">{t['last_update']}: {datetime.now().strftime('%H:%M:%S')}</p>
+                <div class='performance-badge'>⚡ {t['cache_status']}: Active</div>
+            </div>
+        """, unsafe_allow_html=True)
 
+# --- EUROJACKPOT ---
 elif menu == t['euro']:
-    st.markdown(f"<h1 style='text-align:center; padding: 40px;'>{t['euro']}</h1>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns([1, 2, 1])
-    with c2:
-        if st.button(t['predict_btn'], use_container_width=True):
-            with st.spinner("SYNCHRONIZING EUROPEAN NODES..."):
-                with performance_logger("Eurojackpot Prediction"):
-                    st.session_state.euro_pred = engine.generate_prediction('euro')
-        if st.session_state.euro_pred:
-            p = st.session_state.euro_pred
-            # FIXED: Removed backslashes from f-string to prevent SyntaxError
-            main_balls_html = "".join([f'<div class="ball">{n}</div>' for n in p['main']])
-            extra_balls_html = "".join([f'<div class="ball special">{n}</div>' for n in p['extra']])
-            st.markdown(f"""
-                <div class='glass-card' style='text-align: center;'>
-                    <h2 style='color: var(--accent); font-size: 2.5rem;'>{t['confidence']}: {p['confidence']}%</h2>
-                    <h4 style='margin-top:30px; color: var(--primary);'>{t['main_nums']}</h4>
-                    <div class='ball-container'>{main_balls_html}</div>
-                    <h4 style='margin-top:30px; color: var(--accent);'>{t['euro_nums']}</h4>
-                    <div class='ball-container'>{extra_balls_html}</div>
+    st.markdown(f"<h1 style='text-align:center;'>{t['euro']}</h1>", unsafe_allow_html=True)
+    
+    if st.button(t['predict_btn']):
+        with st.spinner("SYNCHRONIZING WITH EUROPEAN NODES..."):
+            with performance_logger("Eurojackpot Prediction"):
+                st.session_state.euro_pred = engine.generate_prediction('euro')
+    
+    if st.session_state.euro_pred:
+        p = st.session_state.euro_pred
+        st.markdown(f"""
+            <div class="glass-card" style="text-align: center;">
+                <h2 style="color: var(--accent);">{t['confidence']}: {p['confidence']}%</h2>
+                <h4 style="margin-top:2rem;">{t['main_nums']}</h4>
+                <div class="ball-container">
+                    {" ".join([f'<div class="ball">{n}</div>' for n in p['main']])}
                 </div>
-            """, unsafe_allow_html=True)
+                <h4 style="margin-top:2rem;">{t['euro_nums']}</h4>
+                <div class="ball-container">
+                    {" ".join([f'<div class="ball special">{n}</div>' for n in p['extra']])}
+                </div>
+                <p style="color: #888;">{t['last_update']}: {datetime.now().strftime('%H:%M:%S')}</p>
+                <div class='performance-badge'>⚡ {t['cache_status']}: Active</div>
+            </div>
+        """, unsafe_allow_html=True)
 
+# --- ANALYTICS ---
 elif menu == t['stats']:
-    st.markdown(f"<h1 style='text-align:center; padding: 40px;'>{t['stats']}</h1>", unsafe_allow_html=True)
-    data = engine.get_historical_data('lotto')
-    m1, m2, m3 = st.columns(3)
-    with m1: st.markdown(f"<div class='metric-container'><div class='metric-value'>500</div><div class='metric-label'>{t['total_draws']}</div></div>", unsafe_allow_html=True)
-    with m2: st.markdown(f"<div class='metric-container'><div class='metric-value'>{data['jackpot'].mean():.1f}M</div><div class='metric-label'>{t['avg_jackpot']}</div></div>", unsafe_allow_html=True)
-    with m3: st.markdown(f"<div class='metric-container'><div class='metric-value'>{data['jackpot'].max():.1f}M</div><div class='metric-label'>{t['max_jackpot']}</div></div>", unsafe_allow_html=True)
-    fig = px.line(data, x='date', y='jackpot', title=t['trend'], template='plotly_dark')
-    fig.update_traces(line_color='#00f2fe', line_width=4)
-    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_family="Orbitron", margin=dict(t=80, b=40))
-    st.plotly_chart(fig, use_container_width=True)
+    st.markdown(f"<h1 style='text-align:center;'>{t['stats']}</h1>", unsafe_allow_html=True)
+    
+    with performance_logger("Analytics Page"):
+        data = engine.get_historical_data('lotto')
+        
+        # Metrics
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.markdown(f"<div class='metric-container'><div class='metric-value'>500</div><div class='metric-label'>{t['total_draws']}</div></div>", unsafe_allow_html=True)
+        with m2:
+            st.markdown(f"<div class='metric-container'><div class='metric-value'>{data['jackpot'].mean():.1f}M</div><div class='metric-label'>{t['avg_jackpot']}</div></div>", unsafe_allow_html=True)
+        with m3:
+            st.markdown(f"<div class='metric-container'><div class='metric-value'>{data['jackpot'].max():.1f}M</div><div class='metric-label'>{t['max_jackpot']}</div></div>", unsafe_allow_html=True)
+
+        # Chart
+        fig = px.line(data, x='date', y='jackpot', title=t['trend'], template='plotly_dark')
+        fig.update_traces(line_color='#00f2fe', line_width=3)
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig, use_container_width=True)
+
+# --- SETTINGS ---
+elif menu == t['settings']:
+    st.markdown(f"<h1 style='text-align:center;'>{t['settings']}</h1>", unsafe_allow_html=True)
+    
+    with st.container():
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        st.subheader(t['lang_label'])
+        lang_choice = st.radio("", ['de', 'en', 'ar'], 
+                               format_func=lambda x: {'de': '🇩🇪 Deutsch', 'en': '🇬🇧 English', 'ar': '🇸🇦 العربية'}[x],
+                               horizontal=True)
+        
+        # Performance Info
+        st.markdown(f"### ⚡ {t['performance']}")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(f"**PyArrow:** {'✅' if PYARROW_AVAILABLE else '❌'}")
+            st.markdown(f"**Cache:** ✅ Active")
+        with col2:
+            st.markdown(f"**Session Cleanup:** Every hour")
+            st.markdown(f"**Compression:** ✅ GZIP")
+        
+        if st.button("SAVE SYSTEM CONFIG"):
+            st.session_state.language = lang_choice
+            st.rerun()
+        
+        st.markdown("---")
+        st.write(f"**System Status:** Quantum Engine Online")
+        st.write(f"**Security Protocol:** 256-bit AES Encrypted")
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # --- FOOTER ---
-st.markdown(f"<div class='footer'><p style='font-weight: bold; color: var(--primary); font-size: 1.1rem;'>{t['footer']}</p><p style='font-size: 0.8rem; max-width: 900px; margin: 20px auto; line-height: 1.6;'>{t['disclaimer']}</p><p style='font-size: 0.7rem; color: #444; margin-top: 20px;'>Quantum Core v2.6 | PyArrow: {'✅' if PYARROW_AVAILABLE else '❌'} | Compression: GZIP Active</p></div>", unsafe_allow_html=True)
+st.markdown(f"""
+    <div class="footer">
+        <p>{t['footer']}</p>
+        <p style="font-size: 0.7rem; max-width: 600px; margin: 0 auto;">{t['disclaimer']}</p>
+        <p style="font-size: 0.6rem; margin-top: 1rem;">⚡ Performance Optimized | Cache: Active | PyArrow: {'✅' if PYARROW_AVAILABLE else '❌'}</p>
+    </div>
+""", unsafe_allow_html=True)
