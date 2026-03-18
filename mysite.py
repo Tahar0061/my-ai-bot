@@ -352,7 +352,7 @@ with st.sidebar:
     st.markdown("---")
     
     # Language selection
-    st.markdown(f"### {TRANS['de']['language']} / {TRANS['en']['language']} / {TRANS['ar']['language']}")
+    st.markdown(f"### Language / Sprache / اللغة")
     
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -627,16 +627,15 @@ elif menu == t['menu_settings']:
     
     with col1:
         st.markdown(f"### {t['language']}")
-        st.radio(
+        lang_choice = st.radio(
             "",
             ['de', 'en', 'ar'],
             format_func=lambda x: {'de': '🇩🇪 Deutsch', 'en': '🇬🇧 English', 'ar': '🇸🇦 العربية'}[x],
-            key='language_radio',
             index=['de', 'en', 'ar'].index(st.session_state.language)
         )
         
         if st.button("Apply / Anwenden / تطبيق"):
-            st.session_state.language = st.session_state.language_radio
+            st.session_state.language = lang_choice
             st.rerun()
     
     with col2:
