@@ -1227,6 +1227,6 @@ def page_daily():
                 bcols=st.columns(min(len(badges),4))
                 for i,b in enumerate(badges):
                     with bcols[i%4]:
-                        st.markdown(f"""<div class="badge">
-                          <span class="badge-icon">{b['icon']}</span>
+                        bicon=b["icon"]; bname=b["name"]
+                        st.markdown(f'<div class="badge"><span class="badge-icon">{bicon}</span><s
                          
