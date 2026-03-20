@@ -1,7 +1,5 @@
 streamlit
-pandas
-numpy
-plotly
 requests
-Pillow
-python-dateutil
+pandas
+plotly
+numpy
